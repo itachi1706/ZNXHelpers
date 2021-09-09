@@ -25,4 +25,4 @@ jobs:
         run: |
           dotnet pack -c Release -o out
           cd out
-          nuget push ZNXHelper.*.nupkg --source https://api.nuget.org/v3/index.json
+          nuget push ZNXHelper.*.nupkg -Source https://api.nuget.org/v3/index.json

@@ -14,12 +14,15 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '3.1.x'
-
-      # Publish
-      - name: publish on version change
-        id: publish_nuget
-        uses: rohith/publish-nuget@v2
+      - name: Setup NuGet.exe for use with actions
+        # You may pin to the exact commit or the version.
+        # uses: NuGet/setup-nuget@04b0c2b8d1b97922f67eca497d7cf0bf17b8ffe1
+        uses: NuGet/setup-nuget@v1.0.5
         with:
-          # Filepath of the project to be packaged, relative to root of repository
-          PROJECT_FILE_PATH: ZNXHelpers/ZNXHelpers.csproj
-          INCLUDE_SYMBOLS: true
+          nuget-api-key: ${{secrets.NUGET_API_KEY}}
+          
+      - name: publish
+        run: |
+          dotnet pack -c Release -o out
+          cd out
+          nuget push ZNXHelper.*.nupkg --source https://api.nuget.org/v3/index.json

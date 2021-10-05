@@ -24,6 +24,7 @@
     <None Remove="AWSSDK.KeyManagementService" />
     <None Remove="Serilog" />
     <None Remove="Newtonsoft.Json" />
+    <None Remove="System.IdentityModel.Tokens.Jwt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="3.7.2.5" />
@@ -32,5 +33,6 @@
     <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.2.9" />
     <PackageReference Include="Serilog" Version="2.10.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.12.2" />
   </ItemGroup>
 </Project>

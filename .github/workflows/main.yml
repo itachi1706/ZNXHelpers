@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - release # Default release branch
+  workflow_dispatch:
 
 jobs:
   build:

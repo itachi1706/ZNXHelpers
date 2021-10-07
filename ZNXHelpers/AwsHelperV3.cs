@@ -42,7 +42,6 @@ namespace ZNXHelpers
             {
                 _logger.Debug(log);
             }
-
         }
         #endregion
 
@@ -63,19 +62,18 @@ namespace ZNXHelpers
         #region STS
         private async Task<AWSCredentials> GetAwsCredentialsSts()
         {
+            var credentialsDebug = AssumeRoleWithWebIdentityCredentials.FromEnvironmentVariables();
+            VerboseLog("[GetAwsCredentialsSts] Getting Creds Async WebIdentity");
+            var debugCreds = credentialsDebug.GetCredentials();
+            var ak = (debugCreds.AccessKey == null) ? "-" : debugCreds.AccessKey;
+            var sk = (debugCreds.SecretKey == null) ? "-" : debugCreds.SecretKey;
+            var tk = (debugCreds.Token == null) ? "-" : debugCreds.Token;
+            VerboseLog($"[GetAwsCredentialsSts] Creds Async gotten WebIdentity. {ak}, {sk}, {tk}");
+
             IAmazonSecurityTokenService stsClient = new AmazonSecurityTokenServiceClient(Amazon.RegionEndpoint.APSoutheast1);
             AWSCredentials stsUser = new Credentials();
             using (var client = stsClient)
             {
-                VerboseLog("[GetAwsCredentialsSts] Get Creds Async Local");
-                var creds = stsUser.GetCredentials();
-                VerboseLog($"[GetAwsCredentialsSts] Creds Async gotten. {creds.AccessKey}, {creds.SecretKey}, {creds.Token}");
-
-                var credentialsDebug = AssumeRoleWithWebIdentityCredentials.FromEnvironmentVariables();
-                VerboseLog("[GetAwsCredentialsSts] Getting Creds Async WebIdentity");
-                var debugCreds = credentialsDebug.GetCredentials();
-                VerboseLog($"[GetAwsCredentialsSts] Creds Async gotten WebIdentity. {debugCreds.AccessKey}, {debugCreds.SecretKey}, {debugCreds.Token}");
-
                 VerboseLog("[GetAwsCredentialsSts] Getting STS Session Token");
                 GetSessionTokenRequest getSessionTokenRequest = new GetSessionTokenRequest() { DurationSeconds = 900 };
                 VerboseLog("[GetAwsCredentialsSts] Getting STS Session Token");

@@ -4,9 +4,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>1.2.6</PackageVersion>
+    <PackageVersion>1.2.7</PackageVersion>
     <Configurations>Release;Debug</Configurations>
-    <Authors>Kenneth Soh</Authors>
+    <Authors>Zionext</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
     <PackageReleaseNotes>First Release</PackageReleaseNotes>
     <Summary>Helper Class for ZNX apps</Summary>

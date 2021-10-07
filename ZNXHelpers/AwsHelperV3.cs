@@ -27,6 +27,24 @@ namespace ZNXHelpers
         private readonly string ProfileName = EnvHelper.GetString("AWS_PROFILE_NAME");
         private readonly string S3BucketName = EnvHelper.GetString("S3_BUCKET_NAME");
         private readonly bool IsAwsEksSa = EnvHelper.GetBool("AWS_EKS_SA", false);
+        private readonly bool VerboseLogEnabled = EnvHelper.GetBool("AWS_VERBOSE_DEBUG", false);
+        private readonly ILogger _logger;
+
+        public AwsHelperV3()
+        {
+            _logger = Log.ForContext<AwsHelperV3>();
+        }
+
+        #region Utils
+        private void VerboseLog(string log)
+        {
+            if (VerboseLogEnabled)
+            {
+                _logger.Debug(log);
+            }
+
+        }
+        #endregion
 
         #region AWS Credentials
         /********** CREDENTIALS **********/
@@ -35,6 +53,7 @@ namespace ZNXHelpers
             var chain = new CredentialProfileStoreChain();
             if (chain.TryGetAWSCredentials(profileName, out AWSCredentials awsCredentials))
             {
+
                 return awsCredentials;
             }
             throw new AmazonServiceException("Failed to get AWS credentials");
@@ -48,10 +67,13 @@ namespace ZNXHelpers
             AWSCredentials stsUser = new Credentials();
             using (var client = stsClient)
             {
-                GetSessionTokenRequest getSessionTokenRequest = new GetSessionTokenRequest() { DurationSeconds = 60 };
+                GetSessionTokenRequest getSessionTokenRequest = new GetSessionTokenRequest() { DurationSeconds = 900 };
+                VerboseLog("[GetAwsCredentialsSts] Getting STS Session Token");
                 GetSessionTokenResponse token = await client.GetSessionTokenAsync();
+                VerboseLog("[GetAwsCredentialsSts] Obtained STS Session Token");
                 stsUser = token.Credentials;
             }
+            VerboseLog("[GetAwsCredentialsSts] Returning STS User");
             return stsUser;
         }
         #endregion
@@ -69,11 +91,14 @@ namespace ZNXHelpers
         {
             if (!IsAwsEksSa)
             {
+                VerboseLog("[GetKmsClientProd] Returning normal prod client");
                 return new AmazonKeyManagementServiceClient(Amazon.RegionEndpoint.APSoutheast1);
             }
 
+            VerboseLog("[GetKmsClientProd] Getting STS credentials");
             var user = GetAwsCredentialsSts();
             user.Wait();
+            VerboseLog("[GetKmsClientProd] Returning STS prod client");
             return new AmazonKeyManagementServiceClient(user.Result);
         }
 
@@ -88,11 +113,14 @@ namespace ZNXHelpers
         {
             if (!IsAwsEksSa)
             {
+                VerboseLog("[GetS3ClientProd] Returning normal prod client");
                 return new AmazonS3Client(Amazon.RegionEndpoint.APSoutheast1);
             }
 
+            VerboseLog("[GetS3ClientProd] Getting STS credentials");
             var user = GetAwsCredentialsSts();
             user.Wait();
+            VerboseLog("[GetS3ClientProd] Returning STS prod client");
             return new AmazonS3Client(user.Result);
         }
 
@@ -107,11 +135,14 @@ namespace ZNXHelpers
         {
             if (!IsAwsEksSa)
             {
+                VerboseLog("[GetSecretsManagerClientProd] Returning normal prod client");
                 return new AmazonSecretsManagerClient(Amazon.RegionEndpoint.APSoutheast1);
             }
 
+            VerboseLog("[GetSecretsManagerClientProd] Getting STS credentials");
             var user = GetAwsCredentialsSts();
             user.Wait();
+            VerboseLog("[GetSecretsManagerClientProd] Returning STS prod client");
             return new AmazonSecretsManagerClient(user.Result);
         }
 
@@ -126,11 +157,14 @@ namespace ZNXHelpers
         {
             if (!IsAwsEksSa)
             {
+                VerboseLog("[GetSimpleSystemsManagementClientProd] Returning normal prod client");
                 return new AmazonSimpleSystemsManagementClient(Amazon.RegionEndpoint.APSoutheast1);
             }
 
+            VerboseLog("[GetSimpleSystemsManagementClientProd] Getting STS credentials");
             var user = GetAwsCredentialsSts();
             user.Wait();
+            VerboseLog("[GetSimpleSystemsManagementClientProd] Returning STS prod client");
             return new AmazonSimpleSystemsManagementClient(user.Result);
         }
         #endregion
@@ -144,14 +178,15 @@ namespace ZNXHelpers
         public async Task<string> GetStringFromParameterStore(string parameterName)
         {
             using var ssmClient = GetSimpleSystemsManagementClient();
-            var _logger = Log.ForContext<AwsHelperV2>();
 
             var request = new GetParameterRequest
             {
                 Name = parameterName
             };
 
+            VerboseLog("[GetStringFromParameterStore] Getting String from Parameter Store");
             var response = await ssmClient.GetParameterAsync(request);
+            VerboseLog("[GetStringFromParameterStore] Obtained String from Parameter Store");
 
             if (response == null || response.Parameter == null)
             {
@@ -170,7 +205,6 @@ namespace ZNXHelpers
         /// <returns></returns>
         public async Task<string> GetStringFromParameterStoreSecureString(string parameterName, bool withDecryption)
         {
-            var _logger = Log.ForContext<AwsHelperV2>();
             _logger.Debug("GetStringFromParameterStoreSecureString(" + parameterName + ", " + withDecryption + ")");
             using var ssmClient = GetSimpleSystemsManagementClient();
 
@@ -180,7 +214,9 @@ namespace ZNXHelpers
                 WithDecryption = withDecryption
             };
 
+            VerboseLog("[GetStringFromParameterStoreSecureString] Getting Secure String from Parameter Store");
             var response = await ssmClient.GetParameterAsync(request);
+            VerboseLog("[GetStringFromParameterStoreSecureString] Obtained Secure String from Parameter Store");
 
             if (response == null || response.Parameter == null)
             {
@@ -190,12 +226,15 @@ namespace ZNXHelpers
 
             if (withDecryption)
             {
+                VerboseLog("[GetStringFromParameterStoreSecureString] Returned String that is decrypted");
                 return response.Parameter.Value;
             }
+            VerboseLog("[GetStringFromParameterStoreSecureString] Decrypting Secure String");
 
             var encryptedValue = response.Parameter.Value;
 
             using MemoryStream memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
+            VerboseLog("[GetStringFromParameterStoreSecureString] Generated SecureString Stream");
 
             var decryptRequest = new DecryptRequest
             {
@@ -207,9 +246,12 @@ namespace ZNXHelpers
                 }
             };
 
+            VerboseLog("[GetStringFromParameterStoreSecureString] Getting KMS Client");
             var kmsClient = GetKMSClient();
 
+            VerboseLog("[GetStringFromParameterStoreSecureString] Prepare to decrypt with KMS Client");
             var decryptResponse = await kmsClient.DecryptAsync(decryptRequest);
+            VerboseLog("[GetStringFromParameterStoreSecureString] Decrypted String with KMS Client");
 
             string decryptedString = Encoding.UTF8.GetString(decryptResponse.Plaintext.ToArray());
 
@@ -223,7 +265,6 @@ namespace ZNXHelpers
         /// <returns></returns>
         public async Task<SecureString> GetSecureStringFromParameterStore(string parameterName)
         {
-            var _logger = Log.ForContext<AwsHelperV2>();
             using var ssmClient = GetSimpleSystemsManagementClient();
 
             var request = new GetParameterRequest
@@ -232,7 +273,9 @@ namespace ZNXHelpers
                 WithDecryption = false
             };
 
+            VerboseLog("[GetSecureStringFromParameterStore] Getting Secure String from Parameter Store");
             var response = await ssmClient.GetParameterAsync(request);
+            VerboseLog("[GetSecureStringFromParameterStore] Obtained Secure String from Parameter Store");
 
             if (response == null || response.Parameter == null)
             {
@@ -243,6 +286,7 @@ namespace ZNXHelpers
             var encryptedValue = response.Parameter.Value;
 
             using MemoryStream memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
+            VerboseLog("[GetSecureStringFromParameterStore] Generated SecureString Stream");
 
             var decryptRequest = new DecryptRequest
             {
@@ -254,18 +298,23 @@ namespace ZNXHelpers
                 }
             };
 
+            VerboseLog("[GetSecureStringFromParameterStore] Getting KMS Client");
             var kmsClient = GetKMSClient();
 
+            VerboseLog("[GetSecureStringFromParameterStore] Preparing to decrypt string with KMS Client");
             var decryptResponse = await kmsClient.DecryptAsync(decryptRequest);
+            VerboseLog("[GetSecureStringFromParameterStore] Decrypted String with KMS Client");
 
             SecureString secureString = new SecureString();
 
             using var reader = new StreamReader(decryptResponse.Plaintext);
+            VerboseLog("[GetSecureStringFromParameterStore] Converted decrypted string to a stream for insertion to SecureString");
 
             while (reader.Peek() >= 0)
             {
                 secureString.AppendChar((char)reader.Read());
             }
+            VerboseLog("[GetSecureStringFromParameterStore] Added to SecureString");
 
             return secureString;
         }
@@ -277,14 +326,15 @@ namespace ZNXHelpers
         /// <returns></returns>
         public async Task<byte[]> GetFileFromS3(string key)
         {
+            VerboseLog("[GetFileFromS3] Getting file from S3 with Default Bucket");
             return await GetFileFromS3(key, S3BucketName);
         }
 
         public async Task<byte[]> GetFileFromS3(string key, string bucketName)
         {
-            var _logger = Log.ForContext<AwsHelperV2>();
-            _logger.Debug("[AwsHelperV2] Inside GetFileFromS3.");
+            _logger.Debug("[AwsHelperV3] Inside GetFileFromS3.");
             var s3Client = GetS3Client();
+            VerboseLog("[GetFileFromS3] Obtained S3 Client");
 
             var request = new GetObjectRequest
             {
@@ -292,10 +342,14 @@ namespace ZNXHelpers
                 Key = key
             };
 
+            VerboseLog("[GetFileFromS3] Preparing to get object from S3");
             var response = await s3Client.GetObjectAsync(request);
+            VerboseLog("[GetFileFromS3] Obtained object from S3");
             using Stream stream = response.ResponseStream;
             using MemoryStream inputStream = new MemoryStream();
+            VerboseLog("[GetFileFromS3] Preparing to copy object to memory stream");
             await stream.CopyToAsync(inputStream);
+            VerboseLog("[GetFileFromS3] Copied object to memory stream");
             return inputStream.ToArray();
         }
 
@@ -306,10 +360,10 @@ namespace ZNXHelpers
         /// <returns></returns>
         public async Task<Dictionary<string, string>> GetSecretFromSecretsManager(string secretName)
         {
-            var _logger = Log.ForContext<AwsHelperV2>();
             _logger.Debug("GetSecretFromSecretsManager(" + secretName + ")");
 
             var secretsManagerClient = GetSecretsManagerClient();
+            VerboseLog("[GetSecretFromSecretsManager] Get SSM Client");
 
             var request = new GetSecretValueRequest
             {
@@ -319,7 +373,9 @@ namespace ZNXHelpers
             try
             {
                 _logger.Debug("Calling secrets manager client");
+                VerboseLog("[GetSecretFromSecretsManager] Preparing to get Secret from SSM");
                 var response = await secretsManagerClient.GetSecretValueAsync(request);
+                VerboseLog("[GetSecretFromSecretsManager] Obtained Secret from SSM");
 
                 if (response == null)
                 {
@@ -330,6 +386,7 @@ namespace ZNXHelpers
                 _logger.Debug("Deserializing secert");
                 _logger.Debug(response.SecretString);
                 Dictionary<string, string> secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.SecretString);
+                VerboseLog("[GetSecretFromSecretsManager] Deserialized Secret");
 
                 _logger.Debug("Returning secrets");
                 return secrets;

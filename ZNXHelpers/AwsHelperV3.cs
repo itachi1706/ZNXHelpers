@@ -99,7 +99,7 @@ namespace ZNXHelpers
             var user = GetAwsCredentialsSts();
             user.Wait();
             VerboseLog("[GetKmsClientProd] Returning STS prod client");
-            return new AmazonKeyManagementServiceClient(user.Result);
+            return new AmazonKeyManagementServiceClient(user.Result, Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonS3Client GetS3Client()
@@ -121,7 +121,7 @@ namespace ZNXHelpers
             var user = GetAwsCredentialsSts();
             user.Wait();
             VerboseLog("[GetS3ClientProd] Returning STS prod client");
-            return new AmazonS3Client(user.Result);
+            return new AmazonS3Client(user.Result, Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSecretsManagerClient GetSecretsManagerClient()
@@ -143,7 +143,7 @@ namespace ZNXHelpers
             var user = GetAwsCredentialsSts();
             user.Wait();
             VerboseLog("[GetSecretsManagerClientProd] Returning STS prod client");
-            return new AmazonSecretsManagerClient(user.Result);
+            return new AmazonSecretsManagerClient(user.Result, Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
@@ -165,7 +165,7 @@ namespace ZNXHelpers
             var user = GetAwsCredentialsSts();
             user.Wait();
             VerboseLog("[GetSimpleSystemsManagementClientProd] Returning STS prod client");
-            return new AmazonSimpleSystemsManagementClient(user.Result);
+            return new AmazonSimpleSystemsManagementClient(user.Result, Amazon.RegionEndpoint.APSoutheast1);
         }
         #endregion
 

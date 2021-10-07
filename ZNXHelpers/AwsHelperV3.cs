@@ -67,6 +67,16 @@ namespace ZNXHelpers
             AWSCredentials stsUser = new Credentials();
             using (var client = stsClient)
             {
+                VerboseLog("[GetAwsCredentialsSts] Get Creds Async Local");
+                var creds = stsUser.GetCredentials();
+                VerboseLog($"[GetAwsCredentialsSts] Creds Async gotten. {creds.AccessKey}, {creds.SecretKey}, {creds.Token}");
+
+                var credentialsDebug = AssumeRoleWithWebIdentityCredentials.FromEnvironmentVariables();
+                VerboseLog("[GetAwsCredentialsSts] Getting Creds Async WebIdentity");
+                var debugCreds = credentialsDebug.GetCredentials();
+                VerboseLog($"[GetAwsCredentialsSts] Creds Async gotten WebIdentity. {debugCreds.AccessKey}, {debugCreds.SecretKey}, {debugCreds.Token}");
+
+                VerboseLog("[GetAwsCredentialsSts] Getting STS Session Token");
                 GetSessionTokenRequest getSessionTokenRequest = new GetSessionTokenRequest() { DurationSeconds = 900 };
                 VerboseLog("[GetAwsCredentialsSts] Getting STS Session Token");
                 GetSessionTokenResponse token = await client.GetSessionTokenAsync();

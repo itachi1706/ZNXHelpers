@@ -63,7 +63,7 @@ namespace ZNXHelpers
         #region STS
         private async Task<AWSCredentials> GetAwsCredentialsSts()
         {
-            IAmazonSecurityTokenService stsClient = new AmazonSecurityTokenServiceClient();
+            IAmazonSecurityTokenService stsClient = new AmazonSecurityTokenServiceClient(Amazon.RegionEndpoint.APSoutheast1);
             AWSCredentials stsUser = new Credentials();
             using (var client = stsClient)
             {

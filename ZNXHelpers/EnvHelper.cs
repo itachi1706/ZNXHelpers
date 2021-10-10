@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ZNXHelpers
 {
@@ -101,6 +102,28 @@ namespace ZNXHelpers
             }
 
             return envRes;
+        }
+
+        public static string[] GetStringArr(string key)
+        {
+            return GetStringArr(key, ',');
+        }
+
+        public static string[] GetStringArr(string key, char seperator)
+        {
+            var envVar = GetString(key);
+            if (string.IsNullOrEmpty(envVar))
+            {
+                return null;
+            }
+            return Array.ConvertAll(envVar.Split(seperator), p => p.Trim());
+        }
+
+        public static List<string> GetStringList(string key, char seperator = ',')
+        {
+            var ans = GetStringArr(key, seperator);
+            if (ans == null) return null;
+            return new List<string>(ans);
         }
     }
 }

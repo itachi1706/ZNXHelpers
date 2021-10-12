@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>1.2.8</PackageVersion>
+    <PackageVersion>1.2.9</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>Zionext</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>

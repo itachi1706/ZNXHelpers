@@ -27,6 +27,7 @@ namespace ZNXHelpers
         private readonly string ProfileName = EnvHelper.GetString("AWS_PROFILE_NAME");
         private readonly string S3BucketName = EnvHelper.GetString("S3_BUCKET_NAME");
         private readonly bool IsAwsEksSa = EnvHelper.GetBool("AWS_EKS_SA", false);
+        private readonly bool IsAwsBasicAuth = EnvHelper.GetBool("AWS_BASIC_AUTH", false);
         private readonly bool VerboseLogEnabled = EnvHelper.GetBool("AWS_VERBOSE_DEBUG", false);
         private readonly ILogger _logger;
 
@@ -57,9 +58,7 @@ namespace ZNXHelpers
             }
             throw new AmazonServiceException("Failed to get AWS credentials");
         }
-        #endregion
 
-        #region STS
         private async Task<AWSCredentials> GetAwsCredentialsSts()
         {
             var credentialsDebug = AssumeRoleWithWebIdentityCredentials.FromEnvironmentVariables();
@@ -84,6 +83,38 @@ namespace ZNXHelpers
             VerboseLog("[GetAwsCredentialsSts] Returning STS User");
             return stsUser;
         }
+
+        private static AWSCredentials GetBasicAWSCredentials()
+        {
+            var awsAK = EnvHelper.GetString("AWS_ACCESS_KEY_ID");
+            var awsSK = EnvHelper.GetString("AWS_SECRET_ACCESS_KEY");
+            if (string.IsNullOrEmpty(awsAK) || string.IsNullOrEmpty(awsSK))
+            {
+                throw new AmazonServiceException("Failed to get basic AWS Credentials");
+            }
+
+            return new BasicAWSCredentials(awsAK, awsSK);
+        }
+
+        private AWSCredentials GetProdCreds()
+        {
+            if (IsAwsEksSa)
+            {
+                VerboseLog("[GetProdCreds] Getting STS credentials");
+                var user = GetAwsCredentialsSts();
+                user.Wait();
+                
+                VerboseLog("[GetProdCreds] Returning STS prod client");
+                return user.Result;
+            }
+            else if (IsAwsBasicAuth)
+            {
+                VerboseLog("[GetProdCreds] Getting Basic Auth credentials");
+                return GetBasicAWSCredentials();
+            }
+
+            return null;
+        }
         #endregion
 
         #region AWS Clients
@@ -97,17 +128,15 @@ namespace ZNXHelpers
 
         private AmazonKeyManagementServiceClient GetKmsClientProd()
         {
-            if (!IsAwsEksSa)
+            var creds = GetProdCreds();
+            if (creds != null)
             {
-                VerboseLog("[GetKmsClientProd] Returning normal prod client");
-                return new AmazonKeyManagementServiceClient(Amazon.RegionEndpoint.APSoutheast1);
+                VerboseLog("[GetKmsClientProd] Returning client with credentials");
+                return new AmazonKeyManagementServiceClient(creds, Amazon.RegionEndpoint.APSoutheast1);
             }
 
-            VerboseLog("[GetKmsClientProd] Getting STS credentials");
-            var user = GetAwsCredentialsSts();
-            user.Wait();
-            VerboseLog("[GetKmsClientProd] Returning STS prod client");
-            return new AmazonKeyManagementServiceClient(user.Result, Amazon.RegionEndpoint.APSoutheast1);
+            VerboseLog("[GetKmsClientProd] Returning normal prod client");
+            return new AmazonKeyManagementServiceClient(Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonS3Client GetS3Client()
@@ -119,17 +148,15 @@ namespace ZNXHelpers
 
         private AmazonS3Client GetS3ClientProd()
         {
-            if (!IsAwsEksSa)
+            var creds = GetProdCreds();
+            if (creds != null)
             {
-                VerboseLog("[GetS3ClientProd] Returning normal prod client");
-                return new AmazonS3Client(Amazon.RegionEndpoint.APSoutheast1);
+                VerboseLog("[GetS3ClientProd] Returning client with credentials");
+                return new AmazonS3Client(creds, Amazon.RegionEndpoint.APSoutheast1);
             }
 
-            VerboseLog("[GetS3ClientProd] Getting STS credentials");
-            var user = GetAwsCredentialsSts();
-            user.Wait();
-            VerboseLog("[GetS3ClientProd] Returning STS prod client");
-            return new AmazonS3Client(user.Result, Amazon.RegionEndpoint.APSoutheast1);
+            VerboseLog("[GetS3ClientProd] Returning normal prod client");
+            return new AmazonS3Client(Amazon.RegionEndpoint.APSoutheast1);            
         }
 
         private AmazonSecretsManagerClient GetSecretsManagerClient()
@@ -141,17 +168,15 @@ namespace ZNXHelpers
 
         private AmazonSecretsManagerClient GetSecretsManagerClientProd()
         {
-            if (!IsAwsEksSa)
+            var creds = GetProdCreds();
+            if (creds != null)
             {
-                VerboseLog("[GetSecretsManagerClientProd] Returning normal prod client");
-                return new AmazonSecretsManagerClient(Amazon.RegionEndpoint.APSoutheast1);
+                VerboseLog("[GetSecretsManagerClientProd] Returning client with credentials");
+                return new AmazonSecretsManagerClient(creds, Amazon.RegionEndpoint.APSoutheast1);
             }
 
-            VerboseLog("[GetSecretsManagerClientProd] Getting STS credentials");
-            var user = GetAwsCredentialsSts();
-            user.Wait();
-            VerboseLog("[GetSecretsManagerClientProd] Returning STS prod client");
-            return new AmazonSecretsManagerClient(user.Result, Amazon.RegionEndpoint.APSoutheast1);
+            VerboseLog("[GetSecretsManagerClientProd] Returning normal prod client");
+            return new AmazonSecretsManagerClient(Amazon.RegionEndpoint.APSoutheast1);            
         }
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
@@ -163,17 +188,15 @@ namespace ZNXHelpers
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClientProd()
         {
-            if (!IsAwsEksSa)
+            var creds = GetProdCreds();
+            if (creds != null)
             {
-                VerboseLog("[GetSimpleSystemsManagementClientProd] Returning normal prod client");
-                return new AmazonSimpleSystemsManagementClient(Amazon.RegionEndpoint.APSoutheast1);
+                VerboseLog("[GetSimpleSystemsManagementClientProd] Returning client with credentials");
+                return new AmazonSimpleSystemsManagementClient(creds, Amazon.RegionEndpoint.APSoutheast1);
             }
 
-            VerboseLog("[GetSimpleSystemsManagementClientProd] Getting STS credentials");
-            var user = GetAwsCredentialsSts();
-            user.Wait();
-            VerboseLog("[GetSimpleSystemsManagementClientProd] Returning STS prod client");
-            return new AmazonSimpleSystemsManagementClient(user.Result, Amazon.RegionEndpoint.APSoutheast1);
+            VerboseLog("[GetSimpleSystemsManagementClientProd] Returning normal prod client");
+            return new AmazonSimpleSystemsManagementClient(Amazon.RegionEndpoint.APSoutheast1);
         }
         #endregion
 

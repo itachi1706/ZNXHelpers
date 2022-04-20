@@ -27,6 +27,7 @@
     <None Remove="System.IdentityModel.Tokens.Jwt" />
     <None Remove="AWSSDK.Core" />
     <None Remove="AWSSDK.SecurityToken" />
+    <None Remove="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="3.7.3.10" />
@@ -38,5 +39,8 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.12.2" />
     <PackageReference Include="AWSSDK.Core" Version="3.7.3.17" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.1.67" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
   </ItemGroup>
 </Project>

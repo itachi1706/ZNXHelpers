@@ -103,7 +103,7 @@ namespace ZNXHelpers
                 VerboseLog("[GetProdCreds] Getting STS credentials");
                 var user = GetAwsCredentialsSts();
                 user.Wait();
-                
+
                 VerboseLog("[GetProdCreds] Returning STS prod client");
                 return user.Result;
             }
@@ -156,7 +156,7 @@ namespace ZNXHelpers
             }
 
             VerboseLog("[GetS3ClientProd] Returning normal prod client");
-            return new AmazonS3Client(Amazon.RegionEndpoint.APSoutheast1);            
+            return new AmazonS3Client(Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSecretsManagerClient GetSecretsManagerClient()
@@ -176,7 +176,7 @@ namespace ZNXHelpers
             }
 
             VerboseLog("[GetSecretsManagerClientProd] Returning normal prod client");
-            return new AmazonSecretsManagerClient(Amazon.RegionEndpoint.APSoutheast1);            
+            return new AmazonSecretsManagerClient(Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
@@ -383,6 +383,91 @@ namespace ZNXHelpers
             VerboseLog("[GetFileFromS3] Copied object to memory stream");
             return inputStream.ToArray();
         }
+
+        public async Task<bool> PutFileToS3(byte[] file, string filePath)
+        {
+            VerboseLog("[PutFileToS3] Putting file into S3 with Default Bucket with default content (text/plain)");
+            return await PutFileToS3(file, filePath, "text/plain");
+        }
+
+        public async Task<bool> PutFileToS3(byte[] file, string filePath, string contentType)
+        {
+            VerboseLog("[PutFileToS3] Putting file into S3 with Default Bucket");
+            return await PutFileToS3(file, filePath, contentType, S3BucketName);
+        }
+
+        public async Task<bool> PutFileToS3(byte[] file, string filePath, string contentType, string bucketName)
+        {
+            VerboseLog("[PutFileToS3] Start");
+            var s3Client = GetS3Client();
+            VerboseLog("[PutFileToS3] Obtained S3 Client");
+
+            using (MemoryStream stream = new MemoryStream(file))
+            {
+                PutObjectRequest request = new PutObjectRequest();
+                request.InputStream = stream;
+                request.BucketName = bucketName;
+                request.Key = filePath;
+                request.ContentType = contentType;
+
+                VerboseLog("[PutFileToS3] Uploading to S3 bucket...");
+
+                var response = await s3Client.PutObjectAsync(request);
+                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    VerboseLog("[PutFileToS3] Successfully uploaded to S3 bucket");
+                    return true;
+                } else
+                {
+                    VerboseLog("[PutFileToS3] Failed to upload to S3 bucket");
+                    return false;
+                }
+            }
+        }
+
+        public string GeneratePreSignedS3URLDownload(string filePath, long expiryMins)
+		{
+            VerboseLog("[PutFileToS3] Getting Pre Signed URL with Default Bucket");
+            return GeneratePreSignedS3URLDownload(filePath, expiryMins, S3BucketName);
+        }
+
+        public string GeneratePreSignedS3URLDownload(string filePath, long expiryMins, string bucketName)
+        {
+            VerboseLog("[GeneratePreSignedS3URLDownload] Start");
+            // Make sure must be less than 7 days (Ref: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html)
+            // 7 days = 10080 minutes
+            if (expiryMins > 10080)
+            {
+                throw new AmazonS3Exception("Expiry cannot be greater than 7 days from time of creation");
+            }
+
+            var s3Client = GetS3Client();
+            VerboseLog("[GeneratePreSignedS3URLDownload] Obtained S3 Client");
+
+            GetPreSignedUrlRequest req = new GetPreSignedUrlRequest
+            {
+                BucketName = bucketName,
+                Key = filePath,
+                Expires = DateTime.UtcNow.AddMinutes(expiryMins)
+            };
+
+            try
+			{
+                VerboseLog("[GeneratePreSignedS3URLDownload] Retrieving Pre-Signed URL");
+                var url = s3Client.GetPreSignedURL(req);
+                return url;
+            } catch (AmazonS3Exception e)
+			{
+                VerboseLog($"[GeneratePreSignedS3URLDownload] Error encountered on server generating pre-signed URL. Message: '{e.Message}' when writing an object");
+			} catch (Exception e)
+			{
+                VerboseLog($"[GeneratePreSignedS3URLDownload] Unknown Exception encountered generating pre-signed URL. Message: '{e.Message}' when writing an object");
+            }
+            
+            return null;
+		}
+
+
 
         /// <summary>
         /// GET secret from AWS Secrets Manager

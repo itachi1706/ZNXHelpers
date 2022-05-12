@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
-using Amazon.KeyManagementService;
+﻿using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
@@ -18,6 +12,12 @@ using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
 using Newtonsoft.Json;
 using Serilog;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ZNXHelpers
 {
@@ -26,6 +26,7 @@ namespace ZNXHelpers
         private readonly string KMSKeyId = EnvHelper.GetString("KMS_KEY_ID");
         private readonly string ProfileName = EnvHelper.GetString("AWS_PROFILE_NAME");
         private readonly string S3BucketName = EnvHelper.GetString("S3_BUCKET_NAME");
+        private readonly string SecretName = EnvHelper.GetString("AWS_SECRET_NAME");
         private readonly bool IsAwsEksSa = EnvHelper.GetBool("AWS_EKS_SA", false);
         private readonly bool IsAwsBasicAuth = EnvHelper.GetBool("AWS_BASIC_AUTH", false);
         private readonly bool VerboseLogEnabled = EnvHelper.GetBool("AWS_VERBOSE_DEBUG", false);
@@ -53,7 +54,6 @@ namespace ZNXHelpers
             var chain = new CredentialProfileStoreChain();
             if (chain.TryGetAWSCredentials(profileName, out AWSCredentials awsCredentials))
             {
-
                 return awsCredentials;
             }
             throw new AmazonServiceException("Failed to get AWS credentials");
@@ -201,6 +201,7 @@ namespace ZNXHelpers
         #endregion
 
         #region AWS Methods
+        #region AWS Parameter Store
         /// <summary>
         /// GET string from AWS Parameter Store
         /// </summary>
@@ -349,7 +350,9 @@ namespace ZNXHelpers
 
             return secureString;
         }
+        #endregion
 
+        #region AWS S3
         /// <summary>
         /// GET file from AWS S3
         /// </summary>
@@ -382,6 +385,18 @@ namespace ZNXHelpers
             await stream.CopyToAsync(inputStream);
             VerboseLog("[GetFileFromS3] Copied object to memory stream");
             return inputStream.ToArray();
+        }
+        #endregion
+
+        #region AWS Secrets Manager
+        /// <summary>
+        /// Get secrets from AWS secrets manager using default secret name
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Dictionary<string, string>> GetSecretFromSecretsManager()
+        {
+            VerboseLog($"[GetSecretFromSecretsManager] Getting secrets from AWS secrets manager using default secret name {SecretName}.");
+            return await GetSecretFromSecretsManager(SecretName);
         }
 
         public async Task<bool> PutFileToS3(byte[] file, string filePath)
@@ -426,7 +441,7 @@ namespace ZNXHelpers
         }
 
         public string GeneratePreSignedS3URLDownload(string filePath, long expiryMins)
-		{
+	{
             VerboseLog("[PutFileToS3] Getting Pre Signed URL with Default Bucket");
             return GeneratePreSignedS3URLDownload(filePath, expiryMins, S3BucketName);
         }
@@ -470,7 +485,7 @@ namespace ZNXHelpers
 
 
         /// <summary>
-        /// GET secret from AWS Secrets Manager
+        /// Get secrets from AWS secrets manager
         /// </summary>
         /// <param name="secretName"></param>
         /// <returns></returns>
@@ -513,6 +528,7 @@ namespace ZNXHelpers
                 return null;
             }
         }
+        #endregion
         #endregion
     }
 }

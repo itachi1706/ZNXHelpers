@@ -38,7 +38,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.17.0" />
     <PackageReference Include="AWSSDK.Core" Version="3.7.11.13" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.1.150" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.1.162" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />

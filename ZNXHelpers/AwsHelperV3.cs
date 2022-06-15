@@ -30,6 +30,7 @@ namespace ZNXHelpers
         private readonly bool IsAwsEksSa = EnvHelper.GetBool("AWS_EKS_SA", false);
         private readonly bool IsAwsBasicAuth = EnvHelper.GetBool("AWS_BASIC_AUTH", false);
         private readonly bool VerboseLogEnabled = EnvHelper.GetBool("AWS_VERBOSE_DEBUG", false);
+        private readonly bool AwsPrintStackTrace = EnvHelper.GetBool("AWS_PRINT_STACK_TRACE", false);
         private readonly ILogger _logger;
 
         public AwsHelperV3()
@@ -426,17 +427,24 @@ namespace ZNXHelpers
                 request.ContentType = contentType;
 
                 VerboseLog("[PutFileToS3] Uploading to S3 bucket...");
-
-                var response = await s3Client.PutObjectAsync(request);
-                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    VerboseLog("[PutFileToS3] Successfully uploaded to S3 bucket");
-                    return true;
-                } else
-                {
-                    VerboseLog("[PutFileToS3] Failed to upload to S3 bucket");
-                    return false;
+                try {
+                    var response = await s3Client.PutObjectAsync(request);
+                    if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        VerboseLog("[PutFileToS3] Successfully uploaded to S3 bucket");
+                        return true;
+                    } else
+                    {
+                        VerboseLog("[PutFileToS3] Failed to upload to S3 bucket");
+                        return false;
+                    }
+                } catch (AmazonS3Exception ex) {
+                    VerboseLog("[PutFileToS3] Failed to upload to S3 bucket. Exception: " + ex.Message);
+                    if (AwsPrintStackTrace) {
+                        VerboseLog(ex.StackTrace);
+                    }
                 }
+                
             }
         }
 

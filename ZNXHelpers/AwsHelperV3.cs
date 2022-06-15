@@ -443,6 +443,7 @@ namespace ZNXHelpers
                     if (AwsPrintStackTrace) {
                         VerboseLog(ex.StackTrace);
                     }
+                    return false;
                 }
                 
             }

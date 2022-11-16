@@ -1,12 +1,11 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 namespace ZNXHelpers.Exceptions
 {
     [Serializable]
     public class HttpResponseException : Exception
     {
         public int StatusCode { get; }
-        public string CustomMessage { get; }
+        public string? CustomMessage { get; }
 
         public HttpResponseException(int statusCode)
         {
@@ -23,16 +22,6 @@ namespace ZNXHelpers.Exceptions
         {
         }
 
-        public override string Message
-        {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(CustomMessage))
-                {
-                    return $"HTTP Response Status Code {StatusCode}.";
-                }
-                return $"{CustomMessage} : HTTP Response Status Code {StatusCode}.";
-            }
-        }
+        public override string Message => string.IsNullOrWhiteSpace(CustomMessage) ? $"HTTP Response Status Code {StatusCode}." : $"{CustomMessage} : HTTP Response Status Code {StatusCode}.";
     }
 }

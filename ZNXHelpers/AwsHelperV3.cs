@@ -12,25 +12,21 @@ using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
 using Newtonsoft.Json;
 using Serilog;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Security;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ZNXHelpers
 {
     public class AwsHelperV3
     {
-        private readonly string KMSKeyId = EnvHelper.GetString("KMS_KEY_ID");
-        private readonly string ProfileName = EnvHelper.GetString("AWS_PROFILE_NAME");
-        private readonly string S3BucketName = EnvHelper.GetString("S3_BUCKET_NAME");
-        private readonly string SecretName = EnvHelper.GetString("AWS_SECRET_NAME");
-        private readonly bool IsAwsEksSa = EnvHelper.GetBool("AWS_EKS_SA", false);
-        private readonly bool IsAwsBasicAuth = EnvHelper.GetBool("AWS_BASIC_AUTH", false);
-        private readonly bool VerboseLogEnabled = EnvHelper.GetBool("AWS_VERBOSE_DEBUG", false);
-        private readonly bool AwsPrintStackTrace = EnvHelper.GetBool("AWS_PRINT_STACK_TRACE", false);
+        private readonly string? _kmsKeyId = EnvHelper.GetString("KMS_KEY_ID");
+        private readonly string? _profileName = EnvHelper.GetString("AWS_PROFILE_NAME");
+        private readonly string? _s3BucketName = EnvHelper.GetString("S3_BUCKET_NAME");
+        private readonly string? _secretName = EnvHelper.GetString("AWS_SECRET_NAME");
+        private readonly bool _isAwsEksSa = EnvHelper.GetBool("AWS_EKS_SA", false);
+        private readonly bool _isAwsBasicAuth = EnvHelper.GetBool("AWS_BASIC_AUTH", false);
+        private readonly bool _verboseLogEnabled = EnvHelper.GetBool("AWS_VERBOSE_DEBUG", false);
+        private readonly bool _awsPrintStackTrace = EnvHelper.GetBool("AWS_PRINT_STACK_TRACE", false);
         private readonly ILogger _logger;
 
         public AwsHelperV3()
@@ -39,9 +35,10 @@ namespace ZNXHelpers
         }
 
         #region Utils
-        private void VerboseLog(string log)
+        private void VerboseLog(string? log)
         {
-            if (VerboseLogEnabled)
+            if (log == null) return; // NO-OP
+            if (_verboseLogEnabled)
             {
                 _logger.Debug(log);
             }
@@ -50,34 +47,34 @@ namespace ZNXHelpers
 
         #region AWS Credentials
         /********** CREDENTIALS **********/
-        private static AWSCredentials GetAWSCredentials(string profileName)
+        private static AWSCredentials GetAwsCredentials(string? profileName)
         {
             var chain = new CredentialProfileStoreChain();
-            if (chain.TryGetAWSCredentials(profileName, out AWSCredentials awsCredentials))
+            if (chain.TryGetAWSCredentials(profileName, out var awsCredentials))
             {
                 return awsCredentials;
             }
             throw new AmazonServiceException("Failed to get AWS credentials");
         }
 
-        private async Task<AWSCredentials> GetAwsCredentialsSts()
+        private async Task<AWSCredentials?> GetAwsCredentialsSts()
         {
             var credentialsDebug = AssumeRoleWithWebIdentityCredentials.FromEnvironmentVariables();
             VerboseLog("[GetAwsCredentialsSts] Getting Creds Async WebIdentity");
             var debugCreds = credentialsDebug.GetCredentials();
-            var ak = (debugCreds.AccessKey == null) ? "-" : debugCreds.AccessKey;
-            var sk = (debugCreds.SecretKey == null) ? "-" : debugCreds.SecretKey;
-            var tk = (debugCreds.Token == null) ? "-" : debugCreds.Token;
+            var ak = debugCreds.AccessKey ?? "-";
+            var sk = debugCreds.SecretKey ?? "-";
+            var tk = debugCreds.Token ?? "-";
             VerboseLog($"[GetAwsCredentialsSts] Creds Async gotten WebIdentity. {ak}, {sk}, {tk}");
 
             IAmazonSecurityTokenService stsClient = new AmazonSecurityTokenServiceClient(Amazon.RegionEndpoint.APSoutheast1);
-            AWSCredentials stsUser = new Credentials();
+            AWSCredentials? stsUser = new Credentials();
             using (var client = stsClient)
             {
                 VerboseLog("[GetAwsCredentialsSts] Getting STS Session Token");
-                GetSessionTokenRequest getSessionTokenRequest = new GetSessionTokenRequest() { DurationSeconds = 900 };
+                var getSessionTokenRequest = new GetSessionTokenRequest() { DurationSeconds = 900 };
                 VerboseLog("[GetAwsCredentialsSts] Getting STS Session Token");
-                GetSessionTokenResponse token = await client.GetSessionTokenAsync();
+                var token = await client.GetSessionTokenAsync();
                 VerboseLog("[GetAwsCredentialsSts] Obtained STS Session Token");
                 stsUser = token.Credentials;
             }
@@ -85,21 +82,21 @@ namespace ZNXHelpers
             return stsUser;
         }
 
-        private static AWSCredentials GetBasicAWSCredentials()
+        private static AWSCredentials GetBasicAwsCredentials()
         {
-            var awsAK = EnvHelper.GetString("AWS_ACCESS_KEY_ID");
-            var awsSK = EnvHelper.GetString("AWS_SECRET_ACCESS_KEY");
-            if (string.IsNullOrEmpty(awsAK) || string.IsNullOrEmpty(awsSK))
+            var awsAk = EnvHelper.GetString("AWS_ACCESS_KEY_ID");
+            var awsSk = EnvHelper.GetString("AWS_SECRET_ACCESS_KEY");
+            if (string.IsNullOrEmpty(awsAk) || string.IsNullOrEmpty(awsSk))
             {
                 throw new AmazonServiceException("Failed to get basic AWS Credentials");
             }
 
-            return new BasicAWSCredentials(awsAK, awsSK);
+            return new BasicAWSCredentials(awsAk, awsSk);
         }
 
-        private AWSCredentials GetProdCreds()
+        private AWSCredentials? GetProdCreds()
         {
-            if (IsAwsEksSa)
+            if (_isAwsEksSa)
             {
                 VerboseLog("[GetProdCreds] Getting STS credentials");
                 var user = GetAwsCredentialsSts();
@@ -108,10 +105,10 @@ namespace ZNXHelpers
                 VerboseLog("[GetProdCreds] Returning STS prod client");
                 return user.Result;
             }
-            else if (IsAwsBasicAuth)
+            else if (_isAwsBasicAuth)
             {
                 VerboseLog("[GetProdCreds] Getting Basic Auth credentials");
-                return GetBasicAWSCredentials();
+                return GetBasicAwsCredentials();
             }
 
             return null;
@@ -120,11 +117,11 @@ namespace ZNXHelpers
 
         #region AWS Clients
         /********** CLIENTS **********/
-        private AmazonKeyManagementServiceClient GetKMSClient()
+        private AmazonKeyManagementServiceClient GetKmsClient()
         {
-            return ProfileName == null ?
+            return _profileName == null ?
                 GetKmsClientProd() :
-                new AmazonKeyManagementServiceClient(GetAWSCredentials(ProfileName), Amazon.RegionEndpoint.APSoutheast1);
+                new AmazonKeyManagementServiceClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonKeyManagementServiceClient GetKmsClientProd()
@@ -142,9 +139,9 @@ namespace ZNXHelpers
 
         private AmazonS3Client GetS3Client()
         {
-            return ProfileName == null ?
+            return _profileName == null ?
                 GetS3ClientProd() :
-                new AmazonS3Client(GetAWSCredentials(ProfileName), Amazon.RegionEndpoint.APSoutheast1);
+                new AmazonS3Client(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonS3Client GetS3ClientProd()
@@ -162,9 +159,9 @@ namespace ZNXHelpers
 
         private AmazonSecretsManagerClient GetSecretsManagerClient()
         {
-            return ProfileName == null ?
+            return _profileName == null ?
                 GetSecretsManagerClientProd() :
-                new AmazonSecretsManagerClient(GetAWSCredentials(ProfileName), Amazon.RegionEndpoint.APSoutheast1);
+                new AmazonSecretsManagerClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSecretsManagerClient GetSecretsManagerClientProd()
@@ -182,9 +179,9 @@ namespace ZNXHelpers
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
         {
-            return ProfileName == null ?
+            return _profileName == null ?
                 GetSimpleSystemsManagementClientProd() :
-                new AmazonSimpleSystemsManagementClient(GetAWSCredentials(ProfileName), Amazon.RegionEndpoint.APSoutheast1);
+                new AmazonSimpleSystemsManagementClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClientProd()
@@ -208,7 +205,7 @@ namespace ZNXHelpers
         /// </summary>
         /// <param name="parameterName"></param>
         /// <returns></returns>
-        public async Task<string> GetStringFromParameterStore(string parameterName)
+        public async Task<string?> GetStringFromParameterStore(string parameterName)
         {
             using var ssmClient = GetSimpleSystemsManagementClient();
 
@@ -236,7 +233,7 @@ namespace ZNXHelpers
         /// <param name="parameterName"></param>
         /// <param name="withDecryption"></param>
         /// <returns></returns>
-        public async Task<string> GetStringFromParameterStoreSecureString(string parameterName, bool withDecryption)
+        public async Task<string?> GetStringFromParameterStoreSecureString(string parameterName, bool withDecryption)
         {
             _logger.Debug("GetStringFromParameterStoreSecureString(" + parameterName + ", " + withDecryption + ")");
             using var ssmClient = GetSimpleSystemsManagementClient();
@@ -266,12 +263,12 @@ namespace ZNXHelpers
 
             var encryptedValue = response.Parameter.Value;
 
-            using MemoryStream memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
+            using var memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
             VerboseLog("[GetStringFromParameterStoreSecureString] Generated SecureString Stream");
 
             var decryptRequest = new DecryptRequest
             {
-                KeyId = KMSKeyId,
+                KeyId = _kmsKeyId,
                 CiphertextBlob = memoryStream,
                 EncryptionContext = new Dictionary<string, string>  // For parameter store secure string, add context to decrypt successfully
                 {
@@ -280,13 +277,13 @@ namespace ZNXHelpers
             };
 
             VerboseLog("[GetStringFromParameterStoreSecureString] Getting KMS Client");
-            var kmsClient = GetKMSClient();
+            var kmsClient = GetKmsClient();
 
             VerboseLog("[GetStringFromParameterStoreSecureString] Prepare to decrypt with KMS Client");
             var decryptResponse = await kmsClient.DecryptAsync(decryptRequest);
             VerboseLog("[GetStringFromParameterStoreSecureString] Decrypted String with KMS Client");
 
-            string decryptedString = Encoding.UTF8.GetString(decryptResponse.Plaintext.ToArray());
+            var decryptedString = Encoding.UTF8.GetString(decryptResponse.Plaintext.ToArray());
 
             return decryptedString;
         }
@@ -296,7 +293,7 @@ namespace ZNXHelpers
         /// </summary>
         /// <param name="parameterName"></param>
         /// <returns></returns>
-        public async Task<SecureString> GetSecureStringFromParameterStore(string parameterName)
+        public async Task<SecureString?> GetSecureStringFromParameterStore(string parameterName)
         {
             using var ssmClient = GetSimpleSystemsManagementClient();
 
@@ -318,12 +315,12 @@ namespace ZNXHelpers
 
             var encryptedValue = response.Parameter.Value;
 
-            using MemoryStream memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
+            using var memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
             VerboseLog("[GetSecureStringFromParameterStore] Generated SecureString Stream");
 
             var decryptRequest = new DecryptRequest
             {
-                KeyId = KMSKeyId,
+                KeyId = _kmsKeyId,
                 CiphertextBlob = memoryStream,
                 EncryptionContext = new Dictionary<string, string>  // For parameter store secure string, add context to decrypt successfully
                 {
@@ -332,13 +329,13 @@ namespace ZNXHelpers
             };
 
             VerboseLog("[GetSecureStringFromParameterStore] Getting KMS Client");
-            var kmsClient = GetKMSClient();
+            var kmsClient = GetKmsClient();
 
             VerboseLog("[GetSecureStringFromParameterStore] Preparing to decrypt string with KMS Client");
             var decryptResponse = await kmsClient.DecryptAsync(decryptRequest);
             VerboseLog("[GetSecureStringFromParameterStore] Decrypted String with KMS Client");
 
-            SecureString secureString = new SecureString();
+            var secureString = new SecureString();
 
             using var reader = new StreamReader(decryptResponse.Plaintext);
             VerboseLog("[GetSecureStringFromParameterStore] Converted decrypted string to a stream for insertion to SecureString");
@@ -362,12 +359,12 @@ namespace ZNXHelpers
         public async Task<byte[]> GetFileFromS3(string key)
         {
             VerboseLog("[GetFileFromS3] Getting file from S3 with Default Bucket");
-            return await GetFileFromS3(key, S3BucketName);
+            return await GetFileFromS3(key, _s3BucketName);
         }
 
-        public async Task<byte[]> GetFileFromS3(string key, string bucketName)
+        public async Task<byte[]> GetFileFromS3(string key, string? bucketName)
         {
-            _logger.Debug("[AwsHelperV3] Inside GetFileFromS3.");
+            _logger.Debug("[AwsHelperV3] Inside GetFileFromS3");
             var s3Client = GetS3Client();
             VerboseLog("[GetFileFromS3] Obtained S3 Client");
 
@@ -380,8 +377,8 @@ namespace ZNXHelpers
             VerboseLog("[GetFileFromS3] Preparing to get object from S3");
             var response = await s3Client.GetObjectAsync(request);
             VerboseLog("[GetFileFromS3] Obtained object from S3");
-            using Stream stream = response.ResponseStream;
-            using MemoryStream inputStream = new MemoryStream();
+            using var stream = response.ResponseStream;
+            using var inputStream = new MemoryStream();
             VerboseLog("[GetFileFromS3] Preparing to copy object to memory stream");
             await stream.CopyToAsync(inputStream);
             VerboseLog("[GetFileFromS3] Copied object to memory stream");
@@ -390,16 +387,6 @@ namespace ZNXHelpers
         #endregion
 
         #region AWS Secrets Manager
-        /// <summary>
-        /// Get secrets from AWS secrets manager using default secret name
-        /// </summary>
-        /// <returns></returns>
-        public async Task<Dictionary<string, string>> GetSecretFromSecretsManager()
-        {
-            VerboseLog($"[GetSecretFromSecretsManager] Getting secrets from AWS secrets manager using default secret name {SecretName}.");
-            return await GetSecretFromSecretsManager(SecretName);
-        }
-
         public async Task<bool> PutFileToS3(byte[] file, string filePath)
         {
             VerboseLog("[PutFileToS3] Putting file into S3 with Default Bucket with default content (text/plain)");
@@ -409,18 +396,18 @@ namespace ZNXHelpers
         public async Task<bool> PutFileToS3(byte[] file, string filePath, string contentType)
         {
             VerboseLog("[PutFileToS3] Putting file into S3 with Default Bucket");
-            return await PutFileToS3(file, filePath, contentType, S3BucketName);
+            return await PutFileToS3(file, filePath, contentType, _s3BucketName);
         }
 
-        public async Task<bool> PutFileToS3(byte[] file, string filePath, string contentType, string bucketName)
+        public async Task<bool> PutFileToS3(byte[] file, string filePath, string contentType, string? bucketName)
         {
             VerboseLog("[PutFileToS3] Start");
             var s3Client = GetS3Client();
             VerboseLog("[PutFileToS3] Obtained S3 Client");
 
-            using (MemoryStream stream = new MemoryStream(file))
+            using (var stream = new MemoryStream(file))
             {
-                PutObjectRequest request = new PutObjectRequest();
+                var request = new PutObjectRequest();
                 request.InputStream = stream;
                 request.BucketName = bucketName;
                 request.Key = filePath;
@@ -440,7 +427,7 @@ namespace ZNXHelpers
                     }
                 } catch (AmazonS3Exception ex) {
                     VerboseLog("[PutFileToS3] Failed to upload to S3 bucket. Exception: " + ex.Message);
-                    if (AwsPrintStackTrace) {
+                    if (_awsPrintStackTrace) {
                         VerboseLog(ex.StackTrace);
                     }
                     return false;
@@ -449,13 +436,13 @@ namespace ZNXHelpers
             }
         }
 
-        public string GeneratePreSignedS3URLDownload(string filePath, long expiryMins)
-	{
+        public string? GeneratePreSignedS3UrlDownload(string filePath, long expiryMins)
+	    {
             VerboseLog("[PutFileToS3] Getting Pre Signed URL with Default Bucket");
-            return GeneratePreSignedS3URLDownload(filePath, expiryMins, S3BucketName);
+            return GeneratePreSignedS3UrlDownload(filePath, expiryMins, _s3BucketName);
         }
 
-        public string GeneratePreSignedS3URLDownload(string filePath, long expiryMins, string bucketName)
+        public string? GeneratePreSignedS3UrlDownload(string filePath, long expiryMins, string? bucketName)
         {
             VerboseLog("[GeneratePreSignedS3URLDownload] Start");
             // Make sure must be less than 7 days (Ref: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html)
@@ -468,7 +455,7 @@ namespace ZNXHelpers
             var s3Client = GetS3Client();
             VerboseLog("[GeneratePreSignedS3URLDownload] Obtained S3 Client");
 
-            GetPreSignedUrlRequest req = new GetPreSignedUrlRequest
+            var req = new GetPreSignedUrlRequest
             {
                 BucketName = bucketName,
                 Key = filePath,
@@ -490,15 +477,23 @@ namespace ZNXHelpers
             
             return null;
 		}
-
-
+        
+        /// <summary>
+        /// Get secrets from AWS secrets manager using default secret name
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Dictionary<string, string>?> GetSecretFromSecretsManager()
+        {
+            VerboseLog($"[GetSecretFromSecretsManager] Getting secrets from AWS secrets manager using default secret name {_secretName}.");
+            return await GetSecretFromSecretsManager(_secretName);
+        }
 
         /// <summary>
         /// Get secrets from AWS secrets manager
         /// </summary>
         /// <param name="secretName"></param>
         /// <returns></returns>
-        public async Task<Dictionary<string, string>> GetSecretFromSecretsManager(string secretName)
+        public async Task<Dictionary<string, string>?> GetSecretFromSecretsManager(string? secretName)
         {
             _logger.Debug("GetSecretFromSecretsManager(" + secretName + ")");
 
@@ -525,7 +520,7 @@ namespace ZNXHelpers
 
                 _logger.Debug("Deserializing secert");
                 _logger.Debug(response.SecretString);
-                Dictionary<string, string> secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.SecretString);
+                var secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.SecretString);
                 VerboseLog("[GetSecretFromSecretsManager] Deserialized Secret");
 
                 _logger.Debug("Returning secrets");

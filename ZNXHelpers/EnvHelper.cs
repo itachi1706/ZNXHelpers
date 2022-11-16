@@ -1,26 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ZNXHelpers
+﻿namespace ZNXHelpers
 {
     public static class EnvHelper
     {
         public static bool IsDevelopmentEnvironment() {
             var environment = GetString("ASPNETCORE_ENVIRONMENT", "Development");
-            return environment.ToLower() == "development";
+            return environment?.ToLower() == "development";
         }
 
         public static bool IsProductionEnvironment() {
             var environment = GetString("ASPNETCORE_ENVIRONMENT", "Development");
-            return environment.ToLower() == "production";
+            return environment?.ToLower() == "production";
         }
 
-        public static string GetString(string key)
+        public static string? GetString(string key)
         {
             return Environment.GetEnvironmentVariable(key);
         }
 
-        public static string GetString(string key, string defaultValue)
+        public static string? GetString(string key, string? defaultValue)
         {
             var envRes = GetString(key);
             if (string.IsNullOrEmpty(envRes))
@@ -33,7 +30,7 @@ namespace ZNXHelpers
         public static int GetInt(string key)
         {
             var envVar = GetString(key);
-            return int.Parse(envVar);
+            return int.Parse(envVar ?? throw new ArgumentNullException(key));
         }
 
         public static int GetInt(string key, int defaultValue)
@@ -54,7 +51,7 @@ namespace ZNXHelpers
         public static long GetLong(string key)
         {
             var envVar = GetString(key);
-            return long.Parse(envVar);
+            return long.Parse(envVar ?? throw new ArgumentNullException(key));
         }
 
         public static long GetLong(string key, long defaultValue)
@@ -75,7 +72,7 @@ namespace ZNXHelpers
         public static double GetDouble(string key)
         {
             var envVar = GetString(key);
-            return double.Parse(envVar);
+            return double.Parse(envVar ?? throw new ArgumentNullException(key));
         }
 
         public static double GetDouble(string key, double defaultValue)
@@ -96,7 +93,7 @@ namespace ZNXHelpers
         public static bool GetBool(string key)
         {
             var envVar = GetString(key);
-            return bool.Parse(envVar);
+            return bool.Parse(envVar ?? throw new ArgumentNullException(key));
         }
 
         public static bool GetBool(string key, bool defaultValue)
@@ -114,12 +111,7 @@ namespace ZNXHelpers
             return envRes;
         }
 
-        public static string[] GetStringArr(string key)
-        {
-            return GetStringArr(key, ',');
-        }
-
-        public static string[] GetStringArr(string key, char seperator)
+        public static string[]? GetStringArr(string key, char seperator = ',')
         {
             var envVar = GetString(key);
             if (string.IsNullOrEmpty(envVar))
@@ -129,7 +121,7 @@ namespace ZNXHelpers
             return Array.ConvertAll(envVar.Split(seperator), p => p.Trim());
         }
 
-        public static List<string> GetStringList(string key, char seperator = ',')
+        public static List<string>? GetStringList(string key, char seperator = ',')
         {
             var ans = GetStringArr(key, seperator);
             if (ans == null) return null;

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Security;
+﻿using System.Security;
 using System.Text;
-using System.Threading.Tasks;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Runtime;
@@ -21,16 +17,16 @@ namespace ZNXHelpers
 {
     public class AwsHelperV2
     {
-        private readonly string KMSKeyId = EnvHelper.GetString("KMS_KEY_ID");
-        private readonly string ProfileName = EnvHelper.GetString("AWS_PROFILE_NAME");
-        private readonly string S3BucketName = EnvHelper.GetString("S3_BUCKET_NAME");
+        private readonly string? _kmsKeyId = EnvHelper.GetString("KMS_KEY_ID");
+        private readonly string? _profileName = EnvHelper.GetString("AWS_PROFILE_NAME");
+        private readonly string? _s3BucketName = EnvHelper.GetString("S3_BUCKET_NAME");
 
         #region AWS Credentials
         /********** CREDENTIALS **********/
-        private static AWSCredentials GetAWSCredentials(string profileName)
+        private static AWSCredentials GetAwsCredentials(string? profileName)
         {
             var chain = new CredentialProfileStoreChain();
-            if (chain.TryGetAWSCredentials(profileName, out AWSCredentials awsCredentials))
+            if (chain.TryGetAWSCredentials(profileName, out var awsCredentials))
             {
                 return awsCredentials;
             }
@@ -40,32 +36,32 @@ namespace ZNXHelpers
 
         #region AWS Clients
         /********** CLIENTS **********/
-        private AmazonKeyManagementServiceClient GetKMSClient()
+        private AmazonKeyManagementServiceClient GetKmsClient()
         {
-            return ProfileName == null ?
+            return _profileName == null ?
                 new AmazonKeyManagementServiceClient(Amazon.RegionEndpoint.APSoutheast1) :
-                new AmazonKeyManagementServiceClient(GetAWSCredentials(ProfileName), Amazon.RegionEndpoint.APSoutheast1);
+                new AmazonKeyManagementServiceClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonS3Client GetS3Client()
         {
-            return ProfileName == null ?
+            return _profileName == null ?
                 new AmazonS3Client(Amazon.RegionEndpoint.APSoutheast1) :
-                new AmazonS3Client(GetAWSCredentials(ProfileName), Amazon.RegionEndpoint.APSoutheast1);
+                new AmazonS3Client(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSecretsManagerClient GetSecretsManagerClient()
         {
-            return ProfileName == null ?
+            return _profileName == null ?
                 new AmazonSecretsManagerClient(Amazon.RegionEndpoint.APSoutheast1) :
-                new AmazonSecretsManagerClient(GetAWSCredentials(ProfileName), Amazon.RegionEndpoint.APSoutheast1);
+                new AmazonSecretsManagerClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
         {
-            return ProfileName == null ?
+            return _profileName == null ?
                 new AmazonSimpleSystemsManagementClient(Amazon.RegionEndpoint.APSoutheast1) :
-                new AmazonSimpleSystemsManagementClient(GetAWSCredentials(ProfileName), Amazon.RegionEndpoint.APSoutheast1);
+                new AmazonSimpleSystemsManagementClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
         #endregion
 
@@ -75,10 +71,10 @@ namespace ZNXHelpers
         /// </summary>
         /// <param name="parameterName"></param>
         /// <returns></returns>
-        public async Task<string> GetStringFromParameterStore(string parameterName)
+        public async Task<string?> GetStringFromParameterStore(string parameterName)
         {
             using var ssmClient = GetSimpleSystemsManagementClient();
-            var _logger = Log.ForContext<AwsHelperV2>();
+            var logger = Log.ForContext<AwsHelperV2>();
 
             var request = new GetParameterRequest
             {
@@ -89,7 +85,7 @@ namespace ZNXHelpers
 
             if (response == null || response.Parameter == null)
             {
-                _logger.Error("Unable to get string from parameter store");
+                logger.Error("Unable to get string from parameter store");
                 return null;
             }
 
@@ -102,10 +98,10 @@ namespace ZNXHelpers
         /// <param name="parameterName"></param>
         /// <param name="withDecryption"></param>
         /// <returns></returns>
-        public async Task<string> GetStringFromParameterStoreSecureString(string parameterName, bool withDecryption)
+        public async Task<string?> GetStringFromParameterStoreSecureString(string parameterName, bool withDecryption)
         {
-            var _logger = Log.ForContext<AwsHelperV2>();
-            _logger.Debug("GetStringFromParameterStoreSecureString(" + parameterName + ", " + withDecryption + ")");
+            var logger = Log.ForContext<AwsHelperV2>();
+            logger.Debug("GetStringFromParameterStoreSecureString(" + parameterName + ", " + withDecryption + ")");
             using var ssmClient = GetSimpleSystemsManagementClient();
 
             var request = new GetParameterRequest
@@ -118,7 +114,7 @@ namespace ZNXHelpers
 
             if (response == null || response.Parameter == null)
             {
-                _logger.Error("Unable to get string from parameter store secure string");
+                logger.Error("Unable to get string from parameter store secure string");
                 return null;
             }
 
@@ -129,11 +125,11 @@ namespace ZNXHelpers
 
             var encryptedValue = response.Parameter.Value;
 
-            using MemoryStream memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
+            using var memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
 
             var decryptRequest = new DecryptRequest
             {
-                KeyId = KMSKeyId,
+                KeyId = _kmsKeyId,
                 CiphertextBlob = memoryStream,
                 EncryptionContext = new Dictionary<string, string>  // For parameter store secure string, add context to decrypt successfully
                 {
@@ -141,11 +137,11 @@ namespace ZNXHelpers
                 }
             };
 
-            var kmsClient = GetKMSClient();
+            var kmsClient = GetKmsClient();
 
             var decryptResponse = await kmsClient.DecryptAsync(decryptRequest);
 
-            string decryptedString = Encoding.UTF8.GetString(decryptResponse.Plaintext.ToArray());
+            var decryptedString = Encoding.UTF8.GetString(decryptResponse.Plaintext.ToArray());
 
             return decryptedString;
         }
@@ -155,9 +151,9 @@ namespace ZNXHelpers
         /// </summary>
         /// <param name="parameterName"></param>
         /// <returns></returns>
-        public async Task<SecureString> GetSecureStringFromParameterStore(string parameterName)
+        public async Task<SecureString?> GetSecureStringFromParameterStore(string parameterName)
         {
-            var _logger = Log.ForContext<AwsHelperV2>();
+            var logger = Log.ForContext<AwsHelperV2>();
             using var ssmClient = GetSimpleSystemsManagementClient();
 
             var request = new GetParameterRequest
@@ -170,17 +166,17 @@ namespace ZNXHelpers
 
             if (response == null || response.Parameter == null)
             {
-                _logger.Error("Unable to get secure string from parameter store");
+                logger.Error("Unable to get secure string from parameter store");
                 return null;
             }
 
             var encryptedValue = response.Parameter.Value;
 
-            using MemoryStream memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
+            using var memoryStream = new MemoryStream(Convert.FromBase64String(encryptedValue));
 
             var decryptRequest = new DecryptRequest
             {
-                KeyId = KMSKeyId,
+                KeyId = _kmsKeyId,
                 CiphertextBlob = memoryStream,
                 EncryptionContext = new Dictionary<string, string>  // For parameter store secure string, add context to decrypt successfully
                 {
@@ -188,11 +184,11 @@ namespace ZNXHelpers
                 }
             };
 
-            var kmsClient = GetKMSClient();
+            var kmsClient = GetKmsClient();
 
             var decryptResponse = await kmsClient.DecryptAsync(decryptRequest);
 
-            SecureString secureString = new SecureString();
+            var secureString = new SecureString();
 
             using var reader = new StreamReader(decryptResponse.Plaintext);
 
@@ -211,13 +207,13 @@ namespace ZNXHelpers
         /// <returns></returns>
         public async Task<byte[]> GetFileFromS3(string key)
         {
-            return await GetFileFromS3(key, S3BucketName);
+            return await GetFileFromS3(key, _s3BucketName);
         }
 
-        public async Task<byte[]> GetFileFromS3(string key, string bucketName)
+        public async Task<byte[]> GetFileFromS3(string key, string? bucketName)
         {
-            var _logger = Log.ForContext<AwsHelperV2>();
-            _logger.Debug("[AwsHelperV2] Inside GetFileFromS3.");
+            var logger = Log.ForContext<AwsHelperV2>();
+            logger.Debug("[AwsHelperV2] Inside GetFileFromS3.");
             var s3Client = GetS3Client();
 
             var request = new GetObjectRequest
@@ -227,8 +223,8 @@ namespace ZNXHelpers
             };
 
             var response = await s3Client.GetObjectAsync(request);
-            using Stream stream = response.ResponseStream;
-            using MemoryStream inputStream = new MemoryStream();
+            using var stream = response.ResponseStream;
+            using var inputStream = new MemoryStream();
             await stream.CopyToAsync(inputStream);
             return inputStream.ToArray();
         }
@@ -238,10 +234,10 @@ namespace ZNXHelpers
         /// </summary>
         /// <param name="secretName"></param>
         /// <returns></returns>
-        public async Task<Dictionary<string, string>> GetSecretFromSecretsManager(string secretName)
+        public async Task<Dictionary<string, string>?> GetSecretFromSecretsManager(string secretName)
         {
-            var _logger = Log.ForContext<AwsHelperV2>();
-            _logger.Debug("GetSecretFromSecretsManager(" + secretName + ")");
+            var logger = Log.ForContext<AwsHelperV2>();
+            logger.Debug("GetSecretFromSecretsManager(" + secretName + ")");
 
             var secretsManagerClient = GetSecretsManagerClient();
 
@@ -252,25 +248,25 @@ namespace ZNXHelpers
 
             try
             {
-                _logger.Debug("Calling secrets manager client");
+                logger.Debug("Calling secrets manager client");
                 var response = await secretsManagerClient.GetSecretValueAsync(request);
 
                 if (response == null)
                 {
-                    _logger.Error("Unable to get secret from secrets manager");
+                    logger.Error("Unable to get secret from secrets manager");
                     return null;
                 }
 
-                _logger.Debug("Deserializing secert");
-                _logger.Debug(response.SecretString);
-                Dictionary<string, string> secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.SecretString);
+                logger.Debug("Deserializing secert");
+                logger.Debug(response.SecretString);
+                var secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.SecretString);
 
-                _logger.Debug("Returning secrets");
+                logger.Debug("Returning secrets");
                 return secrets;
             }
             catch (IOException ex)
             {
-                _logger.Error(ex, "Unable to get secret from secrets manager exception");
+                logger.Error(ex, "Unable to get secret from secrets manager exception");
                 return null;
             }
         }

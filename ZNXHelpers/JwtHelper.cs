@@ -1,6 +1,4 @@
 ﻿using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
@@ -9,7 +7,7 @@ namespace ZNXHelpers
 {
     public class JwtHelper
     {
-        public bool ValidateJwt(string token, TokenValidationParameters tokenValidationParameters, out List<Claim> claims, out SecurityToken securityToken)
+        public bool ValidateJwt(string token, TokenValidationParameters tokenValidationParameters, out List<Claim>? claims, out SecurityToken? securityToken)
         {
             try
             {
@@ -26,12 +24,12 @@ namespace ZNXHelpers
         }
 
         public string CreateJws(
-            string issuer = null,
-            string audience = null,
-            IEnumerable<Claim> claims = null,
+            string? issuer = null,
+            string? audience = null,
+            IEnumerable<Claim>? claims = null,
             DateTime? notBefore = null,
             DateTime? expires = null,
-            X509Certificate2 signingCertificate = null)
+            X509Certificate2? signingCertificate = null)
         {
             X509SigningCredentials signingCredentials = new X509SigningCredentials(signingCertificate, "RS256");
 
@@ -39,12 +37,12 @@ namespace ZNXHelpers
         }
 
         public string CreateJws(
-            string issuer = null,
-            string audience = null,
-            IEnumerable<Claim> claims = null,
+            string? issuer = null,
+            string? audience = null,
+            IEnumerable<Claim>? claims = null,
             DateTime? notBefore = null,
             DateTime? expires = null,
-            SigningCredentials signingCredentials = null)
+            SigningCredentials? signingCredentials = null)
         {
             JwtSecurityToken jwtSecurityToken = new JwtSecurityToken(issuer, audience, claims, notBefore, expires, signingCredentials);
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();

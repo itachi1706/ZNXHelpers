@@ -1,17 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>1.3.6</PackageVersion>
+    <PackageVersion>2.0.0</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>Zionext</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>First Release</PackageReleaseNotes>
+    <PackageReleaseNotes>First .NET 6 Release</PackageReleaseNotes>
     <Summary>Helper Class for ZNX apps</Summary>
     <Title>ZNX Helpers</Title>
     <Description>Common Helper class for various common functions</Description>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackageProjectUrl>https://github.com/itachi1706/ZNXHelpers</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/itachi1706/ZNXHelpers.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

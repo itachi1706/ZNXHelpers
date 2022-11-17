@@ -17,7 +17,7 @@
             return Environment.GetEnvironmentVariable(key);
         }
 
-        public static string? GetString(string key, string? defaultValue)
+        public static string GetString(string key, string defaultValue)
         {
             var envRes = GetString(key);
             if (string.IsNullOrEmpty(envRes))

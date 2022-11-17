@@ -4,11 +4,12 @@
     <TargetFramework>net6.0</TargetFramework>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>2.0.0</PackageVersion>
+    <PackageVersion>2.0.1</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>Zionext</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>First .NET 6 Release</PackageReleaseNotes>
+    <PackageReleaseNotes>First .NET 6 Release
+- Fixed GetString nullability checks</PackageReleaseNotes>
     <Summary>Helper Class for ZNX apps</Summary>
     <Title>ZNX Helpers</Title>
     <Description>Common Helper class for various common functions</Description>

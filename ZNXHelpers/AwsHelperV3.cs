@@ -7,13 +7,14 @@ using Amazon.S3.Model;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using Amazon.SecurityToken;
-using Amazon.SecurityToken.Model;
 using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
 using Newtonsoft.Json;
 using Serilog;
 using System.Security;
 using System.Text;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace ZNXHelpers
 {
@@ -82,11 +83,10 @@ namespace ZNXHelpers
             VerboseLog($"[GetAwsCredentialsSts] Creds Async gotten WebIdentity. {ak}, {sk}, {tk}");
 
             IAmazonSecurityTokenService stsClient = new AmazonSecurityTokenServiceClient(Amazon.RegionEndpoint.APSoutheast1);
-            AWSCredentials? stsUser = new Credentials();
+            AWSCredentials stsUser;
             using (var client = stsClient)
             {
                 VerboseLog("[GetAwsCredentialsSts] Getting STS Session Token");
-                var getSessionTokenRequest = new GetSessionTokenRequest() { DurationSeconds = 900 };
                 VerboseLog("[GetAwsCredentialsSts] Getting STS Session Token");
                 var token = await client.GetSessionTokenAsync();
                 VerboseLog("[GetAwsCredentialsSts] Obtained STS Session Token");
@@ -233,7 +233,7 @@ namespace ZNXHelpers
             LogMetadata(response.ResponseMetadata, "GetStringFromParameterStore");
             VerboseLog("[GetStringFromParameterStore] Obtained String from Parameter Store");
 
-            if (response == null || response.Parameter == null)
+            if (response.Parameter == null)
             {
                 _logger.Error("Unable to get string from parameter store");
                 return null;
@@ -264,7 +264,7 @@ namespace ZNXHelpers
             LogMetadata(response.ResponseMetadata, "GetStringFromParameterStoreSecureString");
             VerboseLog("[GetStringFromParameterStoreSecureString] Obtained Secure String from Parameter Store");
 
-            if (response == null || response.Parameter == null)
+            if (response.Parameter == null)
             {
                 _logger.Error("Unable to get string from parameter store secure string");
                 return null;
@@ -325,7 +325,7 @@ namespace ZNXHelpers
             LogMetadata(response.ResponseMetadata, "GetSecureStringFromParameterStore");
             VerboseLog("[GetSecureStringFromParameterStore] Obtained Secure String from Parameter Store");
 
-            if (response == null || response.Parameter == null)
+            if (response.Parameter == null)
             {
                 _logger.Error("Unable to get secure string from parameter store");
                 return null;
@@ -397,7 +397,7 @@ namespace ZNXHelpers
             var response = await s3Client.GetObjectAsync(request);
             LogMetadata(response.ResponseMetadata, "GetFileFromS3");
             VerboseLog("[GetFileFromS3] Obtained object from S3");
-            using var stream = response.ResponseStream;
+            await using var stream = response.ResponseStream;
             using var inputStream = new MemoryStream();
             VerboseLog("[GetFileFromS3] Preparing to copy object to memory stream");
             await stream.CopyToAsync(inputStream);
@@ -425,36 +425,34 @@ namespace ZNXHelpers
             var s3Client = GetS3Client();
             VerboseLog("[PutFileToS3] Obtained S3 Client");
 
-            using (var stream = new MemoryStream(file))
+            using var stream = new MemoryStream(file);
+            var request = new PutObjectRequest
             {
-                var request = new PutObjectRequest();
-                request.InputStream = stream;
-                request.BucketName = bucketName;
-                request.Key = filePath;
-                request.ContentType = contentType;
+                InputStream = stream,
+                BucketName = bucketName,
+                Key = filePath,
+                ContentType = contentType
+            };
 
-                VerboseLog("[PutFileToS3] Uploading to S3 bucket...");
-                try {
-                    var response = await s3Client.PutObjectAsync(request);
-                    LogMetadata(response.ResponseMetadata, "PutFileToS3");
-                    if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        VerboseLog("[PutFileToS3] Successfully uploaded to S3 bucket");
-                        return true;
-                    } else
-                    {
-                        VerboseLog("[PutFileToS3] Failed to upload to S3 bucket");
-                        return false;
-                    }
-                } catch (AmazonS3Exception ex) {
-                    VerboseLog("[PutFileToS3] Failed to upload to S3 bucket. Exception: " + ex.Message);
-                    VerboseLog("[PutFileToS3] Request ID: " + ex.RequestId);
-                    if (_awsPrintStackTrace) {
-                        VerboseLog(ex.StackTrace);
-                    }
-                    return false;
+            VerboseLog("[PutFileToS3] Uploading to S3 bucket...");
+            try {
+                var response = await s3Client.PutObjectAsync(request);
+                LogMetadata(response.ResponseMetadata, "PutFileToS3");
+                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    VerboseLog("[PutFileToS3] Successfully uploaded to S3 bucket");
+                    return true;
                 }
-                
+
+                VerboseLog("[PutFileToS3] Failed to upload to S3 bucket");
+                return false;
+            } catch (AmazonS3Exception ex) {
+                VerboseLog("[PutFileToS3] Failed to upload to S3 bucket. Exception: " + ex.Message);
+                VerboseLog("[PutFileToS3] Request ID: " + ex.RequestId);
+                if (_awsPrintStackTrace) {
+                    VerboseLog(ex.StackTrace);
+                }
+                return false;
             }
         }
 

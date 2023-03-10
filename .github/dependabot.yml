@@ -9,6 +9,10 @@ updates:
     directory: "/"
     reviewers:
       - "itachi1706"
+    commit-message:
+      prefix: "build"
+      prefix-development: "chore"
+      include: "scope"
     schedule:
       interval: "daily"
   - package-ecosystem: "github-actions"
@@ -17,5 +21,8 @@ updates:
     directory: "/"
     reviewers:
       - "itachi1706"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     schedule:
       interval: "daily"

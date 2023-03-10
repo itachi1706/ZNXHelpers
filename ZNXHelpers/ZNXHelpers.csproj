@@ -4,11 +4,11 @@
     <TargetFramework>net6.0</TargetFramework>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>2.1.0</PackageVersion>
+    <PackageVersion>2.1.1</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>Zionext</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>Add RequestID logging for AWS Packages</PackageReleaseNotes>
+    <PackageReleaseNotes>Dependency Updates</PackageReleaseNotes>
     <Summary>Helper Class for ZNX apps</Summary>
     <Title>ZNX Helpers</Title>
     <Description>Common Helper class for various common functions</Description>

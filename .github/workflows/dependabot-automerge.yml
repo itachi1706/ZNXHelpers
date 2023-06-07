@@ -1,0 +1,19 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+  
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      # Configure in .github/auto-merge.yml
+      - uses: ahmadnassri/action-dependabot-auto-merge@v2
+        with:
+          github-token: ${{ secrets.GH_PAT }}

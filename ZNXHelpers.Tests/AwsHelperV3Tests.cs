@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Amazon;
 using Amazon.KeyManagementService;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -20,10 +21,10 @@ public class AwsHelperV3Tests
     public AwsHelperV3Tests()
     {
         Environment.SetEnvironmentVariable("S3_BUCKET_NAME", "testBucket");
-        _mockS3Client = new Mock<AmazonS3Client>();
-        _mockKmsClient = new Mock<AmazonKeyManagementServiceClient>();
-        _mockSecretsManagerClient = new Mock<AmazonSecretsManagerClient>();
-        _mockSsmClient = new Mock<AmazonSimpleSystemsManagementClient>();
+        _mockS3Client = new Mock<AmazonS3Client>(RegionEndpoint.APSoutheast1);
+        _mockKmsClient = new Mock<AmazonKeyManagementServiceClient>(RegionEndpoint.APSoutheast1);
+        _mockSecretsManagerClient = new Mock<AmazonSecretsManagerClient>(RegionEndpoint.APSoutheast1);
+        _mockSsmClient = new Mock<AmazonSimpleSystemsManagementClient>(RegionEndpoint.APSoutheast1);
         _awsHelperV3 = new AwsHelperV3(_mockS3Client.Object, _mockKmsClient.Object, _mockSecretsManagerClient.Object, _mockSsmClient.Object);
     }
 

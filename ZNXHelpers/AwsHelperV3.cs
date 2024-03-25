@@ -35,10 +35,10 @@ namespace ZNXHelpers
         private readonly ILogger _logger;
 
         /** TESTS ONLY **/
-        private readonly AmazonS3Client _testS3Client;
-        private readonly AmazonKeyManagementServiceClient _testKmsClient;
-        private readonly AmazonSecretsManagerClient _testSecretsManagerClient;
-        private readonly AmazonSimpleSystemsManagementClient _testSimpleSystemsManagementClient;
+        private readonly AmazonS3Client? _testS3Client;
+        private readonly AmazonKeyManagementServiceClient? _testKmsClient;
+        private readonly AmazonSecretsManagerClient? _testSecretsManagerClient;
+        private readonly AmazonSimpleSystemsManagementClient? _testSimpleSystemsManagementClient;
         private readonly bool _testMode;
         public AwsHelperV3(AmazonS3Client s3Client, AmazonKeyManagementServiceClient kmsClient, AmazonSecretsManagerClient smClient, AmazonSimpleSystemsManagementClient ssmClient)
         {
@@ -151,7 +151,7 @@ namespace ZNXHelpers
         /********** CLIENTS **********/
         private AmazonKeyManagementServiceClient GetKmsClient()
         {
-            if (_testMode) return _testKmsClient;
+            if (_testMode) return _testKmsClient!;
             return _profileName == null ?
                 GetKmsClientProd() :
                 new AmazonKeyManagementServiceClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -172,7 +172,7 @@ namespace ZNXHelpers
 
         private AmazonS3Client GetS3Client()
         {
-            if (_testMode) return _testS3Client;
+            if (_testMode) return _testS3Client!;
             return _profileName == null ?
                 GetS3ClientProd() :
                 new AmazonS3Client(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -193,7 +193,7 @@ namespace ZNXHelpers
 
         private AmazonSecretsManagerClient GetSecretsManagerClient()
         {
-            if (_testMode) return _testSecretsManagerClient;
+            if (_testMode) return _testSecretsManagerClient!;
             return _profileName == null ?
                 GetSecretsManagerClientProd() :
                 new AmazonSecretsManagerClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -214,7 +214,7 @@ namespace ZNXHelpers
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
         {
-            if (_testMode) return _testSimpleSystemsManagementClient;
+            if (_testMode) return _testSimpleSystemsManagementClient!;
             return _profileName == null ?
                 GetSimpleSystemsManagementClientProd() :
                 new AmazonSimpleSystemsManagementClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);

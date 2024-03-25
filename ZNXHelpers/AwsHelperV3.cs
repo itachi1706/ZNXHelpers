@@ -13,6 +13,8 @@ using Newtonsoft.Json;
 using Serilog;
 using System.Security;
 using System.Text;
+using ResourceNotFoundException = Amazon.SimpleSystemsManagement.Model.ResourceNotFoundException;
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -32,6 +34,22 @@ namespace ZNXHelpers
         private readonly bool _awsMetadataLoggingEnabled = EnvHelper.GetBool("AWS_RESPONSE_METADATA_DEBUG", false);
         private readonly ILogger _logger;
 
+        /** TESTS ONLY **/
+        private readonly AmazonS3Client? _testS3Client;
+        private readonly AmazonKeyManagementServiceClient? _testKmsClient;
+        private readonly AmazonSecretsManagerClient? _testSecretsManagerClient;
+        private readonly AmazonSimpleSystemsManagementClient? _testSimpleSystemsManagementClient;
+        private readonly bool _testMode;
+        public AwsHelperV3(AmazonS3Client s3Client, AmazonKeyManagementServiceClient kmsClient, AmazonSecretsManagerClient smClient, AmazonSimpleSystemsManagementClient ssmClient)
+        {
+            _logger = Log.ForContext<AwsHelperV3>();
+            _testS3Client = s3Client;
+            _testKmsClient = kmsClient;
+            _testSecretsManagerClient = smClient;
+            _testSimpleSystemsManagementClient = ssmClient;
+            _testMode = true;
+        }
+
         public AwsHelperV3()
         {
             _logger = Log.ForContext<AwsHelperV3>();
@@ -43,7 +61,7 @@ namespace ZNXHelpers
             if (log == null) return; // NO-OP
             if (_verboseLogEnabled)
             {
-                _logger.Debug(log);
+                _logger.Debug("{Log}", log);
             }
         }
         
@@ -108,20 +126,20 @@ namespace ZNXHelpers
             return new BasicAWSCredentials(awsAk, awsSk);
         }
 
-        private AWSCredentials? GetProdCreds()
+        private AWSCredentials? GetProdCredentials()
         {
             if (_isAwsEksSa)
             {
-                VerboseLog("[GetProdCreds] Getting STS credentials");
+                VerboseLog("[GetProdCredentials] Getting STS credentials");
                 var user = GetAwsCredentialsSts();
                 user.Wait();
 
-                VerboseLog("[GetProdCreds] Returning STS prod client");
+                VerboseLog("[GetProdCredentials] Returning STS prod client");
                 return user.Result;
             }
             else if (_isAwsBasicAuth)
             {
-                VerboseLog("[GetProdCreds] Getting Basic Auth credentials");
+                VerboseLog("[GetProdCredentials] Getting Basic Auth credentials");
                 return GetBasicAwsCredentials();
             }
 
@@ -133,6 +151,7 @@ namespace ZNXHelpers
         /********** CLIENTS **********/
         private AmazonKeyManagementServiceClient GetKmsClient()
         {
+            if (_testMode) return _testKmsClient!;
             return _profileName == null ?
                 GetKmsClientProd() :
                 new AmazonKeyManagementServiceClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -140,11 +159,11 @@ namespace ZNXHelpers
 
         private AmazonKeyManagementServiceClient GetKmsClientProd()
         {
-            var creds = GetProdCreds();
-            if (creds != null)
+            var credentials = GetProdCredentials();
+            if (credentials != null)
             {
                 VerboseLog("[GetKmsClientProd] Returning client with credentials");
-                return new AmazonKeyManagementServiceClient(creds, Amazon.RegionEndpoint.APSoutheast1);
+                return new AmazonKeyManagementServiceClient(credentials, Amazon.RegionEndpoint.APSoutheast1);
             }
 
             VerboseLog("[GetKmsClientProd] Returning normal prod client");
@@ -153,6 +172,7 @@ namespace ZNXHelpers
 
         private AmazonS3Client GetS3Client()
         {
+            if (_testMode) return _testS3Client!;
             return _profileName == null ?
                 GetS3ClientProd() :
                 new AmazonS3Client(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -160,11 +180,11 @@ namespace ZNXHelpers
 
         private AmazonS3Client GetS3ClientProd()
         {
-            var creds = GetProdCreds();
-            if (creds != null)
+            var credentials = GetProdCredentials();
+            if (credentials != null)
             {
                 VerboseLog("[GetS3ClientProd] Returning client with credentials");
-                return new AmazonS3Client(creds, Amazon.RegionEndpoint.APSoutheast1);
+                return new AmazonS3Client(credentials, Amazon.RegionEndpoint.APSoutheast1);
             }
 
             VerboseLog("[GetS3ClientProd] Returning normal prod client");
@@ -173,6 +193,7 @@ namespace ZNXHelpers
 
         private AmazonSecretsManagerClient GetSecretsManagerClient()
         {
+            if (_testMode) return _testSecretsManagerClient!;
             return _profileName == null ?
                 GetSecretsManagerClientProd() :
                 new AmazonSecretsManagerClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -180,7 +201,7 @@ namespace ZNXHelpers
 
         private AmazonSecretsManagerClient GetSecretsManagerClientProd()
         {
-            var creds = GetProdCreds();
+            var creds = GetProdCredentials();
             if (creds != null)
             {
                 VerboseLog("[GetSecretsManagerClientProd] Returning client with credentials");
@@ -193,6 +214,7 @@ namespace ZNXHelpers
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
         {
+            if (_testMode) return _testSimpleSystemsManagementClient!;
             return _profileName == null ?
                 GetSimpleSystemsManagementClientProd() :
                 new AmazonSimpleSystemsManagementClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -200,11 +222,11 @@ namespace ZNXHelpers
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClientProd()
         {
-            var creds = GetProdCreds();
-            if (creds != null)
+            var credentials = GetProdCredentials();
+            if (credentials != null)
             {
                 VerboseLog("[GetSimpleSystemsManagementClientProd] Returning client with credentials");
-                return new AmazonSimpleSystemsManagementClient(creds, Amazon.RegionEndpoint.APSoutheast1);
+                return new AmazonSimpleSystemsManagementClient(credentials, Amazon.RegionEndpoint.APSoutheast1);
             }
 
             VerboseLog("[GetSimpleSystemsManagementClientProd] Returning normal prod client");
@@ -250,7 +272,7 @@ namespace ZNXHelpers
         /// <returns></returns>
         public async Task<string?> GetStringFromParameterStoreSecureString(string parameterName, bool withDecryption)
         {
-            _logger.Debug("GetStringFromParameterStoreSecureString(" + parameterName + ", " + withDecryption + ")");
+            _logger.Debug("GetStringFromParameterStoreSecureString({ParameterName}, {Decryption})", parameterName, withDecryption);
             using var ssmClient = GetSimpleSystemsManagementClient();
 
             var request = new GetParameterRequest
@@ -404,9 +426,7 @@ namespace ZNXHelpers
             VerboseLog("[GetFileFromS3] Copied object to memory stream");
             return inputStream.ToArray();
         }
-        #endregion
-
-        #region AWS Secrets Manager
+        
         public async Task<bool> PutFileToS3(byte[] file, string filePath)
         {
             VerboseLog("[PutFileToS3] Putting file into S3 with Default Bucket with default content (text/plain)");
@@ -456,18 +476,18 @@ namespace ZNXHelpers
             }
         }
 
-        public string? GeneratePreSignedS3UrlDownload(string filePath, long expiryMins)
+        public string? GeneratePreSignedS3UrlDownload(string filePath, long expiryMin)
 	    {
             VerboseLog("[PutFileToS3] Getting Pre Signed URL with Default Bucket");
-            return GeneratePreSignedS3UrlDownload(filePath, expiryMins, _s3BucketName);
+            return GeneratePreSignedS3UrlDownload(filePath, expiryMin, _s3BucketName);
         }
 
-        public string? GeneratePreSignedS3UrlDownload(string filePath, long expiryMins, string? bucketName)
+        public string? GeneratePreSignedS3UrlDownload(string filePath, long expiryMin, string? bucketName)
         {
             VerboseLog("[GeneratePreSignedS3URLDownload] Start");
             // Make sure must be less than 7 days (Ref: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html)
             // 7 days = 10080 minutes
-            if (expiryMins > 10080)
+            if (expiryMin > 10080)
             {
                 throw new AmazonS3Exception("Expiry cannot be greater than 7 days from time of creation");
             }
@@ -479,7 +499,7 @@ namespace ZNXHelpers
             {
                 BucketName = bucketName,
                 Key = filePath,
-                Expires = DateTime.UtcNow.AddMinutes(expiryMins)
+                Expires = DateTime.UtcNow.AddMinutes(expiryMin)
             };
 
             try
@@ -498,6 +518,9 @@ namespace ZNXHelpers
             
             return null;
 		}
+        #endregion
+
+        #region AWS Secrets Manager
         
         /// <summary>
         /// Get secrets from AWS secrets manager using default secret name
@@ -516,7 +539,7 @@ namespace ZNXHelpers
         /// <returns></returns>
         public async Task<Dictionary<string, string>?> GetSecretFromSecretsManager(string? secretName)
         {
-            _logger.Debug("GetSecretFromSecretsManager(" + secretName + ")");
+            _logger.Debug("GetSecretFromSecretsManager({SecretName})", secretName);
 
             var secretsManagerClient = GetSecretsManagerClient();
             VerboseLog("[GetSecretFromSecretsManager] Get SSM Client");
@@ -534,14 +557,8 @@ namespace ZNXHelpers
                 LogMetadata(response.ResponseMetadata, "GetSecretFromSecretsManager");
                 VerboseLog("[GetSecretFromSecretsManager] Obtained Secret from SSM");
 
-                if (response == null)
-                {
-                    _logger.Error("Unable to get secret from secrets manager");
-                    return null;
-                }
-
                 _logger.Debug("Deserializing secert");
-                _logger.Debug(response.SecretString);
+                _logger.Debug("{SS}", response.SecretString);
                 var secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.SecretString);
                 VerboseLog("[GetSecretFromSecretsManager] Deserialized Secret");
 
@@ -552,6 +569,11 @@ namespace ZNXHelpers
             {
                 _logger.Error(ex, "Unable to get secret from secrets manager exception");
                 return null;
+            }
+            catch (ResourceNotFoundException ex2)
+            {
+                _logger.Error(ex2, "Unable to get secret from secrets manager");
+                return null;   
             }
         }
         #endregion

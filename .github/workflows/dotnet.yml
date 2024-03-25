@@ -3,10 +3,9 @@ name: Build Project
 on: [push, pull_request]
 
 jobs:
-  build:
-
+  build-and-test:
     runs-on: ubuntu-latest
-
+    name: Build and Test Project
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -17,3 +16,5 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --collect:"XPlat Code Coverage" --verbosity normal

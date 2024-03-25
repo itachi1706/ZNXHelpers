@@ -43,6 +43,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"itachi1706_ZNXHelpers" /o:"itachi1706" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"itachi1706_ZNXHelpers" /o:"itachi1706" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverage.xml
           dotnet build
+          dotnet test --no-build --collect:"XPlat Code Coverage;Format=cobertura,opencover" --verbosity normal
+           mv ZNXHelpers.Tests/TestResults/*/coverage.opencover.xml coverage.xml
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"

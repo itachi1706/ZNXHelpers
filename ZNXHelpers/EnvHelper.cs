@@ -4,12 +4,12 @@
     {
         public static bool IsDevelopmentEnvironment() {
             var environment = GetString("ASPNETCORE_ENVIRONMENT", "Development");
-            return environment?.ToLower() == "development";
+            return environment.ToLower() == "development";
         }
 
         public static bool IsProductionEnvironment() {
             var environment = GetString("ASPNETCORE_ENVIRONMENT", "Development");
-            return environment?.ToLower() == "production";
+            return environment.ToLower() == "production";
         }
 
         public static string? GetString(string key)

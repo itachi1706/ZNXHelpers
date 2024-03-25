@@ -21,6 +21,8 @@ public class AwsHelperV3Tests
     public AwsHelperV3Tests()
     {
         Environment.SetEnvironmentVariable("S3_BUCKET_NAME", "testBucket");
+        Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "test");
+        Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "test");
         _mockS3Client = new Mock<AmazonS3Client>(RegionEndpoint.APSoutheast1);
         _mockKmsClient = new Mock<AmazonKeyManagementServiceClient>(RegionEndpoint.APSoutheast1);
         _mockSecretsManagerClient = new Mock<AmazonSecretsManagerClient>(RegionEndpoint.APSoutheast1);

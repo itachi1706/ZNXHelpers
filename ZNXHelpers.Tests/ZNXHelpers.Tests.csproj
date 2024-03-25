@@ -31,4 +31,10 @@
     <ProjectReference Include="..\ZNXHelpers\ZNXHelpers.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="test.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

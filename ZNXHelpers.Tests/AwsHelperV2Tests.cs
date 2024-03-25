@@ -28,6 +28,7 @@ public class AwsHelperV2Tests
         Environment.SetEnvironmentVariable("AWS_SECRET_NAME", "testSecret");
         Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "test");
         Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "test");
+        Environment.SetEnvironmentVariable("AWS_PROFILE_NAME", "test");
         _mockS3Client = new Mock<AmazonS3Client>(RegionEndpoint.APSoutheast1);
         _mockKmsClient = new Mock<AmazonKeyManagementServiceClient>(RegionEndpoint.APSoutheast1);
         _mockSecretsManagerClient = new Mock<AmazonSecretsManagerClient>(RegionEndpoint.APSoutheast1);

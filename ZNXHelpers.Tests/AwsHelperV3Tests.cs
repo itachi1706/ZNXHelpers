@@ -29,6 +29,11 @@ public class AwsHelperV3Tests
         Environment.SetEnvironmentVariable("AWS_SECRET_NAME", "testSecret");
         Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "test");
         Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "test");
+        Environment.SetEnvironmentVariable("AWS_PRINT_STACK_TRACE", "true");
+        Environment.SetEnvironmentVariable("AWS_BASIC_AUTH", "true");
+        Environment.SetEnvironmentVariable("AWS_VERBOSE_DEBUG", "true");
+        Environment.SetEnvironmentVariable("AWS_REQUEST_ID_DEBUG", "true");
+        Environment.SetEnvironmentVariable("AWS_RESPONSE_METADATA_DEBUG", "true");
         _mockS3Client = new Mock<AmazonS3Client>(RegionEndpoint.APSoutheast1);
         _mockKmsClient = new Mock<AmazonKeyManagementServiceClient>(RegionEndpoint.APSoutheast1);
         _mockSecretsManagerClient = new Mock<AmazonSecretsManagerClient>(RegionEndpoint.APSoutheast1);
@@ -44,7 +49,8 @@ public class AwsHelperV3Tests
         var bucketName = "testBucket";
         var response = new GetObjectResponse
         {
-            ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test content"))
+            ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test content")),
+            ResponseMetadata = new ResponseMetadata()
         };
         
         _mockS3Client.Setup(x => x.GetObjectAsync(It.IsAny<GetObjectRequest>(), It.IsAny<CancellationToken>()))
@@ -58,7 +64,8 @@ public class AwsHelperV3Tests
         
         var response2 = new GetObjectResponse
         {
-            ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test content"))
+            ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test content")),
+            ResponseMetadata = new ResponseMetadata()
         };
         _mockS3Client.Setup(x => x.GetObjectAsync(It.IsAny<GetObjectRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response2);
@@ -80,12 +87,14 @@ public class AwsHelperV3Tests
 
         var response = new PutObjectResponse()
         {
-            HttpStatusCode = HttpStatusCode.OK
+            HttpStatusCode = HttpStatusCode.OK,
+            ResponseMetadata = new ResponseMetadata()
         };
         
         var response2 = new PutObjectResponse()
         {
-            HttpStatusCode = HttpStatusCode.NoContent
+            HttpStatusCode = HttpStatusCode.NoContent,
+            ResponseMetadata = new ResponseMetadata()
         };
         
         _mockS3Client.Setup(x => x.PutObjectAsync(It.IsAny<PutObjectRequest>(), It.IsAny<CancellationToken>()))
@@ -177,7 +186,8 @@ public class AwsHelperV3Tests
             Parameter = new Parameter()
             {
                 Value = "test"
-            }
+            },
+            ResponseMetadata = new ResponseMetadata()
         };
         
         _mockSsmClient.Setup(x =>
@@ -223,7 +233,8 @@ public class AwsHelperV3Tests
                 x.DecryptAsync(It.IsAny<DecryptRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DecryptResponse()
             {
-                Plaintext = new MemoryStream(Encoding.UTF8.GetBytes("test"))
+                Plaintext = new MemoryStream(Encoding.UTF8.GetBytes("test")),
+                ResponseMetadata = new ResponseMetadata()
             });
         
         // Act

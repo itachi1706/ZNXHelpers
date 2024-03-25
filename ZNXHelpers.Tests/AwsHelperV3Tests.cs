@@ -1,11 +1,16 @@
 using System.Net;
+using System.Security;
 using System.Text;
 using Amazon;
 using Amazon.KeyManagementService;
+using Amazon.KeyManagementService.Model;
+using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.SecretsManager;
+using Amazon.SecretsManager.Model;
 using Amazon.SimpleSystemsManagement;
+using Amazon.SimpleSystemsManagement.Model;
 using Moq;
 
 namespace ZNXHelpers.Tests;
@@ -21,6 +26,7 @@ public class AwsHelperV3Tests
     public AwsHelperV3Tests()
     {
         Environment.SetEnvironmentVariable("S3_BUCKET_NAME", "testBucket");
+        Environment.SetEnvironmentVariable("AWS_SECRET_NAME", "testSecret");
         Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "test");
         Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "test");
         _mockS3Client = new Mock<AmazonS3Client>(RegionEndpoint.APSoutheast1);
@@ -131,6 +137,100 @@ public class AwsHelperV3Tests
         
         // Assert
         Assert.Contains(response, result);
+    }
+
+    [Fact]
+    public async Task TestGetSecretFromSecretManager()
+    {
+        var secretName = "test";
+        var response = new GetSecretValueResponse()
+        {
+            SecretString = "{\"name\":\"test\"}",
+            ResponseMetadata = new ResponseMetadata()
+        };
+        
+        
+        _mockSecretsManagerClient.Setup(x =>
+                x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+        
+        // Act
+        var result = await _awsHelperV3.GetSecretFromSecretsManager(secretName);
+        
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("test", result["name"]);
+        
+        result = await _awsHelperV3.GetSecretFromSecretsManager();
+        
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("test", result["name"]);
+    }
+
+    [Fact]
+    public async Task TestGetStringFromParameterStore()
+    {
+        var parameterName = "testParam";
+        var response = new GetParameterResponse()
+        {
+            Parameter = new Parameter()
+            {
+                Value = "test"
+            }
+        };
+        
+        _mockSsmClient.Setup(x =>
+                x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+        
+        // Act
+        var result = await _awsHelperV3.GetStringFromParameterStore(parameterName);
+        
+        // Assert
+        Assert.Equal("test", result);
+        
+        result = await _awsHelperV3.GetStringFromParameterStoreSecureString(parameterName, true);
+        
+        // Assert
+        Assert.Equal("test", result);
+    }
+    
+    [Fact]
+    public async Task TestGetSecureStringFromParameterStore()
+    {
+        var parameterName = "testParam";
+        var response = new GetParameterResponse()
+        {
+            Parameter = new Parameter()
+            {
+                Value = "test"
+            },
+            ResponseMetadata = new ResponseMetadata()
+        };
+        
+        var secureString = new SecureString();
+        secureString.AppendChar('t');
+        secureString.AppendChar('e');
+        secureString.AppendChar('s');
+        secureString.AppendChar('t');
+        
+        _mockSsmClient.Setup(x =>
+                x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+        
+        _mockKmsClient.Setup(x =>
+                x.DecryptAsync(It.IsAny<DecryptRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DecryptResponse()
+            {
+                Plaintext = new MemoryStream(Encoding.UTF8.GetBytes("test"))
+            });
+        
+        // Act
+        var result = await _awsHelperV3.GetSecureStringFromParameterStore(parameterName);
+        
+        // Assert
+        Assert.Equivalent(secureString, result);
     }
 
     // Add more tests for other methods in the AwsHelperV3 class

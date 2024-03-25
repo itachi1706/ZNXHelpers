@@ -101,7 +101,7 @@ namespace ZNXHelpers
         public async Task<string?> GetStringFromParameterStoreSecureString(string parameterName, bool withDecryption)
         {
             var logger = Log.ForContext<AwsHelperV2>();
-            logger.Debug("GetStringFromParameterStoreSecureString(" + parameterName + ", " + withDecryption + ")");
+            logger.Debug("GetStringFromParameterStoreSecureString({ParameterName}, {WithDecryption})", parameterName, withDecryption);
             using var ssmClient = GetSimpleSystemsManagementClient();
 
             var request = new GetParameterRequest
@@ -213,7 +213,7 @@ namespace ZNXHelpers
         public async Task<byte[]> GetFileFromS3(string key, string? bucketName)
         {
             var logger = Log.ForContext<AwsHelperV2>();
-            logger.Debug("[AwsHelperV2] Inside GetFileFromS3.");
+            logger.Debug("[AwsHelperV2] Inside GetFileFromS3");
             var s3Client = GetS3Client();
 
             var request = new GetObjectRequest
@@ -237,7 +237,7 @@ namespace ZNXHelpers
         public async Task<Dictionary<string, string>?> GetSecretFromSecretsManager(string secretName)
         {
             var logger = Log.ForContext<AwsHelperV2>();
-            logger.Debug("GetSecretFromSecretsManager(" + secretName + ")");
+            logger.Debug("GetSecretFromSecretsManager({SecretName})", secretName);
 
             var secretsManagerClient = GetSecretsManagerClient();
 
@@ -257,8 +257,8 @@ namespace ZNXHelpers
                     return null;
                 }
 
-                logger.Debug("Deserializing secert");
-                logger.Debug(response.SecretString);
+                logger.Debug("Deserializing secret");
+                logger.Debug("{SS}", response.SecretString);
                 var secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.SecretString);
 
                 logger.Debug("Returning secrets");

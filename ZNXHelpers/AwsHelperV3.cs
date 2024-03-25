@@ -34,6 +34,22 @@ namespace ZNXHelpers
         private readonly bool _awsMetadataLoggingEnabled = EnvHelper.GetBool("AWS_RESPONSE_METADATA_DEBUG", false);
         private readonly ILogger _logger;
 
+        /** TESTS ONLY **/
+        private readonly AmazonS3Client _testS3Client;
+        private readonly AmazonKeyManagementServiceClient _testKmsClient;
+        private readonly AmazonSecretsManagerClient _testSecretsManagerClient;
+        private readonly AmazonSimpleSystemsManagementClient _testSimpleSystemsManagementClient;
+        private readonly bool _testMode;
+        public AwsHelperV3(AmazonS3Client s3Client, AmazonKeyManagementServiceClient kmsClient, AmazonSecretsManagerClient smClient, AmazonSimpleSystemsManagementClient ssmClient)
+        {
+            _logger = Log.ForContext<AwsHelperV3>();
+            _testS3Client = s3Client;
+            _testKmsClient = kmsClient;
+            _testSecretsManagerClient = smClient;
+            _testSimpleSystemsManagementClient = ssmClient;
+            _testMode = true;
+        }
+
         public AwsHelperV3()
         {
             _logger = Log.ForContext<AwsHelperV3>();
@@ -135,6 +151,7 @@ namespace ZNXHelpers
         /********** CLIENTS **********/
         private AmazonKeyManagementServiceClient GetKmsClient()
         {
+            if (_testMode) return _testKmsClient;
             return _profileName == null ?
                 GetKmsClientProd() :
                 new AmazonKeyManagementServiceClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -155,6 +172,7 @@ namespace ZNXHelpers
 
         private AmazonS3Client GetS3Client()
         {
+            if (_testMode) return _testS3Client;
             return _profileName == null ?
                 GetS3ClientProd() :
                 new AmazonS3Client(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -175,6 +193,7 @@ namespace ZNXHelpers
 
         private AmazonSecretsManagerClient GetSecretsManagerClient()
         {
+            if (_testMode) return _testSecretsManagerClient;
             return _profileName == null ?
                 GetSecretsManagerClientProd() :
                 new AmazonSecretsManagerClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -195,6 +214,7 @@ namespace ZNXHelpers
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
         {
+            if (_testMode) return _testSimpleSystemsManagementClient;
             return _profileName == null ?
                 GetSimpleSystemsManagementClientProd() :
                 new AmazonSimpleSystemsManagementClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
@@ -406,9 +426,7 @@ namespace ZNXHelpers
             VerboseLog("[GetFileFromS3] Copied object to memory stream");
             return inputStream.ToArray();
         }
-        #endregion
-
-        #region AWS Secrets Manager
+        
         public async Task<bool> PutFileToS3(byte[] file, string filePath)
         {
             VerboseLog("[PutFileToS3] Putting file into S3 with Default Bucket with default content (text/plain)");
@@ -500,6 +518,9 @@ namespace ZNXHelpers
             
             return null;
 		}
+        #endregion
+
+        #region AWS Secrets Manager
         
         /// <summary>
         /// Get secrets from AWS secrets manager using default secret name

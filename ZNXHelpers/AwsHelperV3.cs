@@ -13,6 +13,8 @@ using Newtonsoft.Json;
 using Serilog;
 using System.Security;
 using System.Text;
+using ResourceNotFoundException = Amazon.SimpleSystemsManagement.Model.ResourceNotFoundException;
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -534,12 +536,6 @@ namespace ZNXHelpers
                 LogMetadata(response.ResponseMetadata, "GetSecretFromSecretsManager");
                 VerboseLog("[GetSecretFromSecretsManager] Obtained Secret from SSM");
 
-                if (response == null)
-                {
-                    _logger.Error("Unable to get secret from secrets manager");
-                    return null;
-                }
-
                 _logger.Debug("Deserializing secert");
                 _logger.Debug("{SS}", response.SecretString);
                 var secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.SecretString);
@@ -552,6 +548,11 @@ namespace ZNXHelpers
             {
                 _logger.Error(ex, "Unable to get secret from secrets manager exception");
                 return null;
+            }
+            catch (ResourceNotFoundException ex2)
+            {
+                _logger.Error(ex2, "Unable to get secret from secrets manager");
+                return null;   
             }
         }
         #endregion

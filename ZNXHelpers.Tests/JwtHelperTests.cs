@@ -48,6 +48,8 @@ public class JwtHelperTests
         };
         List<Claim> claims;
         SecurityToken securityToken;
+        List<Claim> claims2;
+        SecurityToken securityToken2;
 
         // Act
         var result = _jwtHelper.ValidateJwt(token, tokenValidationParameters, out claims, out securityToken);
@@ -56,6 +58,14 @@ public class JwtHelperTests
         Assert.True(result);
         Assert.NotNull(claims);
         Assert.NotNull(securityToken);
+        
+        // Act
+        var result2 = _jwtHelper.ValidateJwt("not a token", tokenValidationParameters, out claims2, out securityToken2);
+
+        // Assert
+        Assert.False(result2);
+        Assert.Null(claims2);
+        Assert.Null(securityToken2);
     }
 
     [Fact]
@@ -75,6 +85,12 @@ public class JwtHelperTests
 
         // Assert
         Assert.NotNull(result);
+        
+        // Act
+        var result2 = _jwtHelper.CreateJws(issuer, audience, claims, notBefore, expires, signingCertificate);
+
+        // Assert
+        Assert.NotNull(result2);
     }
 
     // Add more tests for other methods in the JwtHelper class

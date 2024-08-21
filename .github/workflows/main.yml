@@ -21,6 +21,8 @@ jobs:
         uses: NuGet/setup-nuget@v2.0.0
         with:
           nuget-api-key: ${{secrets.NUGET_API_KEY}}
+          
+      # TEMP: nuget push ZNXHelpers.*.nupkg -Source https://api.nuget.org/v3/index.json
       - name: Publish to Nuget API and GitHub Packages
         run: |
           dotnet pack -c Release -o out

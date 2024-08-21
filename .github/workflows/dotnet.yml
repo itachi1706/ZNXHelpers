@@ -3,21 +3,18 @@ name: Build Project
 on: [push, pull_request]
 
 jobs:
-  build:
-
+  build-and-test:
     runs-on: ubuntu-latest
-
+    name: Build and Test Project
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
-    - name: 'Qodana Scan'
-      uses: JetBrains/qodana-action@main
-      env:
-        QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+    - name: Test
+      run: dotnet test --no-build --collect:"XPlat Code Coverage" --verbosity normal

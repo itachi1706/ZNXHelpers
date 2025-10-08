@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.0.1] - 2025-10-08
+### :sparkles: New Features
+- [`a4f0084`](https://github.com/itachi1706/ZNXHelpers/commit/a4f0084ad01e64865a661abe809a2072f94e520e) - Dependency updates and reintroduce .net 6 *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :wrench: Chores
+- [`5df6fc9`](https://github.com/itachi1706/ZNXHelpers/commit/5df6fc949f2a9804aa5d59ecf1a4a6a18339d431) - Disable debug *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+
 ## [v3.0.0] - 2025-07-01
 ### :sparkles: New Features
 - [`729565f`](https://github.com/itachi1706/ZNXHelpers/commit/729565f9f183eab1ccea559987136d8c121a20a6) - upgrade for dotnet 8 *(commit by [@xiaopang254](https://github.com/xiaopang254))*
@@ -61,3 +69,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v2.1.2]: https://github.com/itachi1706/ZNXHelpers/compare/v2.1.1...v2.1.2
 [v2.2.0]: https://github.com/itachi1706/ZNXHelpers/compare/v2.1.2...v2.2.0
 [v3.0.0]: https://github.com/itachi1706/ZNXHelpers/compare/v2.2.0...v3.0.0
+[v3.0.1]: https://github.com/itachi1706/ZNXHelpers/compare/v3.0.0...v3.0.1

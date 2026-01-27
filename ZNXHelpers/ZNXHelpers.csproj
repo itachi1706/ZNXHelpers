@@ -17,7 +17,7 @@
     <RepositoryUrl>https://github.com/itachi1706/ZNXHelpers.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Copyright>2025 EMQ2 Technology Services Pte Ltd</Copyright>
-    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0;net8.0;net10.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -37,15 +37,15 @@
     <None Remove="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="4.0.7.7" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.4.3" />
-    <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.1.6" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.4.7" />
-    <PackageReference Include="AWSSDK.Core" Version="4.0.0.32" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.2.6" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.17.3" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.6.11" />
+    <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.4.5" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.8.7" />
+    <PackageReference Include="AWSSDK.Core" Version="4.0.3.11" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.8" />
     <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />

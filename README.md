@@ -14,12 +14,12 @@ ZNXHelpers is a multi-targeted .NET helper library that centralises cross-cuttin
 ## Getting Started
 
 ### Prerequisites
-- .NET SDK 8.0 or later (library targets `net6.0`, `net7.0`, and `net8.0`; the test project runs on `net8.0`).
+- .NET SDK 10.0 or later (library targets `net6.0`, `net7.0`, `net8.0`, and `net10.0`; the test project runs on `net8.0`).
 
 ### Install from NuGet
 
 ```bash
-dotnet add package ZNXHelpers --version 3.0.1
+dotnet add package ZNXHelpers --version 3.0.2
 ```
 
 ### Reference from Source

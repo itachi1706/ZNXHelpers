@@ -3,11 +3,11 @@
   <PropertyGroup>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>3.0.1</PackageVersion>
+    <PackageVersion>3.0.2</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>EMQ2</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>Dependency Updates and .net 6 support</PackageReleaseNotes>
+    <PackageReleaseNotes>Dependency updates and .NET 10 target</PackageReleaseNotes>
     <Summary>Helper Class for ZNX apps</Summary>
     <Title>ZNX Helpers</Title>
     <Description>Common Helper class for various common functions</Description>

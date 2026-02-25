@@ -3,11 +3,11 @@
   <PropertyGroup>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>3.0.2</PackageVersion>
+    <PackageVersion>3.1.0</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>EMQ2</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>Dependency updates and .NET 10 target</PackageReleaseNotes>
+    <PackageReleaseNotes>Add Web helper for NDI</PackageReleaseNotes>
     <Summary>Helper Class for ZNX apps</Summary>
     <Title>ZNX Helpers</Title>
     <Description>Common Helper class for various common functions</Description>

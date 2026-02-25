@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.0] - 2026-02-25
+### :sparkles: New Features
+- [`00e87b0`](https://github.com/itachi1706/ZNXHelpers/commit/00e87b0471bf329b47c216cb3cf32f0a497b8112) - Migrated Web call function to common *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :white_check_mark: Tests
+- [`317db77`](https://github.com/itachi1706/ZNXHelpers/commit/317db77cf9667036609566f429dcffa202df4ccb) - Added test cases *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :wrench: Chores
+- [`2d7b716`](https://github.com/itachi1706/ZNXHelpers/commit/2d7b716ea1167380b2dd8cce5532cb0d14df4fbf) - **deps**: bump actions/setup-java from 4 to 5 *(commit by [@dependabot[bot]](https://github.com/apps/dependabot))*
+- [`1cc9262`](https://github.com/itachi1706/ZNXHelpers/commit/1cc9262012c8771b9baba929043b9748706a7980) - **deps**: bump github/codeql-action from 3 to 4 *(commit by [@dependabot[bot]](https://github.com/apps/dependabot))*
+- [`37e81e5`](https://github.com/itachi1706/ZNXHelpers/commit/37e81e54a15a8614b9c6ede1f35561f57f7a5bb8) - **deps**: bump actions/checkout from 4 to 5 *(commit by [@dependabot[bot]](https://github.com/apps/dependabot))*
+- [`5484c3e`](https://github.com/itachi1706/ZNXHelpers/commit/5484c3eba5a994b63e0baedd4e99328a3578fb4a) - **deps**: bump stefanzweifel/git-auto-commit-action from 5 to 7 *(commit by [@dependabot[bot]](https://github.com/apps/dependabot))*
+- [`49b9e62`](https://github.com/itachi1706/ZNXHelpers/commit/49b9e62fb0c757243c55544f19b4982c5a2bfa26) - Bump version *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+
+## [v3.0.2] - 2026-01-27
+### :wrench: Chores
+- [`2cf0432`](https://github.com/itachi1706/ZNXHelpers/commit/2cf0432a96f16b39b257ef55cbc36526cd9866a7) - Added README *(commit by [@xiaopang254](https://github.com/xiaopang254))*
+- [`fb06362`](https://github.com/itachi1706/ZNXHelpers/commit/fb0636201efa0d3a76c52663cd54f5f4526f77d9) - upgrade libraries *(commit by [@xiaopang254](https://github.com/xiaopang254))*
+- [`53166d6`](https://github.com/itachi1706/ZNXHelpers/commit/53166d69cc701e22eb604ca65d9c07699624669e) - update readme, upgrade version number *(commit by [@xiaopang254](https://github.com/xiaopang254))*
+
+
 ## [v3.0.1] - 2025-10-08
 ### :sparkles: New Features
 - [`a4f0084`](https://github.com/itachi1706/ZNXHelpers/commit/a4f0084ad01e64865a661abe809a2072f94e520e) - Dependency updates and reintroduce .net 6 *(commit by [@itachi1706](https://github.com/itachi1706))*
@@ -70,3 +92,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v2.2.0]: https://github.com/itachi1706/ZNXHelpers/compare/v2.1.2...v2.2.0
 [v3.0.0]: https://github.com/itachi1706/ZNXHelpers/compare/v2.2.0...v3.0.0
 [v3.0.1]: https://github.com/itachi1706/ZNXHelpers/compare/v3.0.0...v3.0.1
+[v3.0.2]: https://github.com/itachi1706/ZNXHelpers/compare/v3.0.1...v3.0.2
+[v3.1.0]: https://github.com/itachi1706/ZNXHelpers/compare/v3.0.2...v3.1.0

@@ -13,7 +13,7 @@ using Amazon.SimpleSystemsManagement.Model;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace ZNXHelpers
+namespace SPCCSHelpers
 {
     public class AwsHelperV2
     {

@@ -1,6 +1,6 @@
-using ZNXHelpers.Exceptions;
+using SPCCSHelpers.Exceptions;
 
-namespace ZNXHelpers.Tests.Exceptions;
+namespace SPCCSHelpers.Tests.Exceptions;
 
 public class HttpResponseExceptionTests
 {

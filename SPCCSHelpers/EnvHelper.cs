@@ -1,4 +1,4 @@
-﻿namespace ZNXHelpers
+﻿namespace SPCCSHelpers
 {
     public static class EnvHelper
     {

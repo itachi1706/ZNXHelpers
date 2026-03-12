@@ -1,6 +1,6 @@
 using Serilog;
 
-namespace ZNXHelpers;
+namespace SPCCSHelpers;
 
 public class NdiHelper
 {

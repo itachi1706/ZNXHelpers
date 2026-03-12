@@ -1,5 +1,5 @@
 ﻿using System.Runtime.Serialization;
-namespace ZNXHelpers.Exceptions
+namespace SPCCSHelpers.Exceptions
 {
     [Serializable]
     public class HttpResponseException : Exception

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace ZNXHelpers
+namespace SPCCSHelpers
 {
     public class Base64Helper
     {

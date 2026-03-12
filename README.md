@@ -1,7 +1,7 @@
 
-# ZNXHelpers
+# SPC CS Helpers
 
-ZNXHelpers is a multi-targeted .NET helper library that centralises cross-cutting concerns used across ZNX applications. It packages reusable utilities for AWS integration, environment configuration, encoding, JWT handling, secure random generation, and common exceptions so service code can stay focused on domain logic.
+SPCCSHelpers is a multi-targeted .NET helper library that centralises cross-cutting concerns used across SPC applications. It packages reusable utilities for AWS integration, environment configuration, encoding, JWT handling, secure random generation, and common exceptions so service code can stay focused on domain logic.
 
 ## Features
 - `AwsHelperV3` (recommended) and `AwsHelperV2` wrap AWS SDK clients for Parameter Store, Secrets Manager, S3, and KMS. V3 adds richer logging, multiple credential sources (shared profiles, STS via EKS service accounts, basic credentials), and pre-signed URL generation.
@@ -19,13 +19,13 @@ ZNXHelpers is a multi-targeted .NET helper library that centralises cross-cuttin
 ### Install from NuGet
 
 ```bash
-dotnet add package ZNXHelpers --version 3.1.1
+dotnet add package SPCCSHelpers --version 3.1.1
 ```
 
 ### Reference from Source
 
 ```bash
-dotnet add <your-project>.csproj reference ../ZNXHelpers/ZNXHelpers.csproj
+dotnet add <your-project>.csproj reference ../SPCCSHelpers/SPCCSHelpers.csproj
 ```
 
 ## Usage
@@ -33,7 +33,7 @@ dotnet add <your-project>.csproj reference ../ZNXHelpers/ZNXHelpers.csproj
 ### AWS helper (v3)
 
 ```csharp
-using ZNXHelpers;
+using SPCCSHelpers;
 
 var aws = new AwsHelperV3();
 
@@ -74,7 +74,7 @@ All AWS operations default to the `ap-southeast-1` region and fall back to the s
 ### Environment helper
 
 ```csharp
-using ZNXHelpers;
+using SPCCSHelpers;
 
 var isDevelopment = EnvHelper.IsDevelopmentEnvironment();
 var redisPort = EnvHelper.GetInt("REDIS_PORT", 6379);
@@ -86,7 +86,7 @@ var allowedOrigins = EnvHelper.GetStringList("ALLOWED_ORIGINS") ?? new List<stri
 ```csharp
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
-using ZNXHelpers;
+using SPCCSHelpers;
 
 var helper = new JwtHelper();
 var validationParameters = new TokenValidationParameters
@@ -117,7 +117,7 @@ var jws = helper.CreateJws(
 ### Base64 and RNG helpers
 
 ```csharp
-using ZNXHelpers;
+using SPCCSHelpers;
 
 var base64 = new Base64Helper();
 var encoded = base64.EncodeString("hello world");
@@ -131,7 +131,7 @@ var password = rng.GeneratePassword(32);
 
 ```csharp
 using Microsoft.AspNetCore.Http;
-using ZNXHelpers.Exceptions;
+using SPCCSHelpers.Exceptions;
 
 throw new HttpResponseException(StatusCodes.Status403Forbidden, "Missing permission");
 ```
@@ -140,21 +140,20 @@ throw new HttpResponseException(StatusCodes.Status403Forbidden, "Missing permiss
 
 ```bash
 # Restore dependencies
-dotnet restore ZNXHelpers.sln
+dotnet restore SPCCSHelpers.sln
 
 # Build the library
-dotnet build ZNXHelpers.sln
+dotnet build SPCCSHelpers.sln
 
 # Run the test suite (xUnit + Moq + coverlet)
-dotnet test ZNXHelpers.sln
+dotnet test SPCCSHelpers.sln
 
 # Optional: collect coverage
-dotnet test ZNXHelpers.sln /p:CollectCoverage=true
+dotnet test SPCCSHelpers.sln /p:CollectCoverage=true
 ```
 
-Use `dotnet pack ZNXHelpers/ZNXHelpers.csproj -c Release` to produce a NuGet package when you are ready to publish.
+Use `dotnet pack SPCCSHelpers/SPCCSHelpers.csproj -c Release` to produce a NuGet package when you are ready to publish.
 
 ## Additional Resources
 - `CHANGELOG.md` tracks notable changes across releases.
-- `qodana.yaml` holds static analysis rules for JetBrains Qodana.
-- `ZNXHelpers.Tests` includes samples that demonstrate how each helper is exercised.
+- `SPCCSHelpers.Tests` includes samples that demonstrate how each helper is exercised.

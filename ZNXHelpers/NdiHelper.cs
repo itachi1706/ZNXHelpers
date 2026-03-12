@@ -60,7 +60,8 @@ public class NdiHelper
                 ? await client.PostAsync($"{endpointPath}", data)
                 : await client.GetAsync($"{endpointPath}");
             string msg = await httpResponseMessage.Content.ReadAsStringAsync();
-            _logger.Debug("Response: {Msg}", msg);
+            string statusCode = httpResponseMessage.StatusCode.ToString();
+            _logger.Debug("Status Code: {StatusCode}, Response: {Msg}", statusCode, msg);
 
             return msg;
         }

@@ -3,11 +3,11 @@
   <PropertyGroup>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>3.1.0</PackageVersion>
+    <PackageVersion>3.1.1</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>EMQ2</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>Add Web helper for NDI</PackageReleaseNotes>
+    <PackageReleaseNotes>Add status code for repsonse</PackageReleaseNotes>
     <Summary>Helper Class for ZNX apps</Summary>
     <Title>ZNX Helpers</Title>
     <Description>Common Helper class for various common functions</Description>

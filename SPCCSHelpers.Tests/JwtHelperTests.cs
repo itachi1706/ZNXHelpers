@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.Tokens;
 
-namespace ZNXHelpers.Tests;
+namespace SPCCSHelpers.Tests;
 
 public class JwtHelperTests
 {

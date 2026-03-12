@@ -18,7 +18,7 @@ using ResourceNotFoundException = Amazon.SimpleSystemsManagement.Model.ResourceN
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace ZNXHelpers
+namespace SPCCSHelpers
 {
     public class AwsHelperV3
     {

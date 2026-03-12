@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ZNXHelpers\ZNXHelpers.csproj" />
+    <ProjectReference Include="..\SPCCSHelpers\SPCCSHelpers.csproj" />
   </ItemGroup>
 
   <ItemGroup>

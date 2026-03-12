@@ -12,7 +12,7 @@ using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
 using Moq;
 
-namespace ZNXHelpers.Tests;
+namespace SPCCSHelpers.Tests;
 
 public class AwsHelperV2Tests
 {

@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace ZNXHelpers
+namespace SPCCSHelpers
 {
     public class RngHelper
     {

@@ -8,13 +8,13 @@
     <Authors>EMQ2</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
     <PackageReleaseNotes>Add status code for repsonse</PackageReleaseNotes>
-    <Summary>Helper Class for ZNX apps</Summary>
-    <Title>ZNX Helpers</Title>
+    <Summary>Helper Class for SPC Common Services</Summary>
+    <Title>SPCCS Helpers</Title>
     <Description>Common Helper class for various common functions</Description>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <PackageProjectUrl>https://github.com/itachi1706/ZNXHelpers</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/itachi1706/ZNXHelpers.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/itachi1706/SPCCSHelpers</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/itachi1706/SPCCSHelpers.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Copyright>2025 EMQ2 Technology Services Pte Ltd</Copyright>
     <TargetFrameworks>net6.0;net7.0;net8.0;net10.0</TargetFrameworks>

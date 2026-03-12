@@ -1,4 +1,4 @@
-namespace ZNXHelpers.Tests;
+namespace SPCCSHelpers.Tests;
 
 public class RngHelperTests
 {

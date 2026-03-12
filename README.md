@@ -19,7 +19,7 @@ ZNXHelpers is a multi-targeted .NET helper library that centralises cross-cuttin
 ### Install from NuGet
 
 ```bash
-dotnet add package ZNXHelpers --version 3.1.0
+dotnet add package ZNXHelpers --version 3.1.1
 ```
 
 ### Reference from Source

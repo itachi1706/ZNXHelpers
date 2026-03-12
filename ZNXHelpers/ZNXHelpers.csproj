@@ -3,11 +3,11 @@
   <PropertyGroup>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>3.1.0</PackageVersion>
+    <PackageVersion>3.1.1</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>EMQ2</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>Add Web helper for NDI</PackageReleaseNotes>
+    <PackageReleaseNotes>Add status code for repsonse</PackageReleaseNotes>
     <Summary>Helper Class for ZNX apps</Summary>
     <Title>ZNX Helpers</Title>
     <Description>Common Helper class for various common functions</Description>
@@ -38,12 +38,12 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.17.3" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.6.11" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.7.1" />
     <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.4.5" />
     <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.8.7" />
-    <PackageReference Include="AWSSDK.Core" Version="4.0.3.11" />
+    <PackageReference Include="AWSSDK.Core" Version="4.0.3.15" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.8" />
-    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>

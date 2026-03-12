@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.1] - 2026-03-12
+### :sparkles: New Features
+- [`cc62577`](https://github.com/itachi1706/ZNXHelpers/commit/cc625771c686a6449814d206123b642f91932438) - Added status code logging and bump version *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :wrench: Chores
+- [`41ccef8`](https://github.com/itachi1706/ZNXHelpers/commit/41ccef81fe3377af8b172d2c383a95a43c787baf) - **deps**: bump actions/setup-dotnet from 4 to 5 *(commit by [@dependabot[bot]](https://github.com/apps/dependabot))*
+- [`050a29c`](https://github.com/itachi1706/ZNXHelpers/commit/050a29ce61d8bd27f8b67748adf6f1d319e6c2ea) - **deps**: bump actions/cache from 4 to 5 *(commit by [@dependabot[bot]](https://github.com/apps/dependabot))*
+- [`1b0c1f3`](https://github.com/itachi1706/ZNXHelpers/commit/1b0c1f38063db178d78e963287830d7d376825c1) - **deps**: bump actions/checkout from 5 to 6 *(commit by [@dependabot[bot]](https://github.com/apps/dependabot))*
+
+
 ## [v3.1.0] - 2026-02-25
 ### :sparkles: New Features
 - [`00e87b0`](https://github.com/itachi1706/ZNXHelpers/commit/00e87b0471bf329b47c216cb3cf32f0a497b8112) - Migrated Web call function to common *(commit by [@itachi1706](https://github.com/itachi1706))*
@@ -94,3 +104,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v3.0.1]: https://github.com/itachi1706/ZNXHelpers/compare/v3.0.0...v3.0.1
 [v3.0.2]: https://github.com/itachi1706/ZNXHelpers/compare/v3.0.1...v3.0.2
 [v3.1.0]: https://github.com/itachi1706/ZNXHelpers/compare/v3.0.2...v3.1.0
+[v3.1.1]: https://github.com/itachi1706/ZNXHelpers/compare/v3.1.0...v3.1.1

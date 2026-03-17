@@ -3,6 +3,7 @@ using System.Security;
 using System.Text;
 using Amazon;
 using Amazon.CloudWatch;
+using Amazon.CloudWatch.Model;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Runtime;
@@ -247,5 +248,122 @@ public class AwsHelperV3Tests
         Assert.Equivalent(secureString, result);
     }
 
-    // Add more tests for other methods in the AwsHelperV3 class
+    [Fact]
+    public async Task PushMetric_withClient_skipsPublishingWhenCustomMetricsDisabled()
+    {
+        Environment.SetEnvironmentVariable("AWS_CUSTOM_METRICS", "false");
+
+        var helper = new AwsHelperV3(
+            _mockS3Client.Object,
+            _mockKmsClient.Object,
+            _mockSecretsManagerClient.Object,
+            _mockSsmClient.Object,
+            _mockCwClient.Object);
+
+        var metricList = new List<MetricDatum>
+        {
+            new() { MetricName = "RequestCount", Unit = StandardUnit.Count, Value = 1 }
+        };
+
+        await helper.PushMetric(_mockCwClient.Object, metricList);
+
+        _mockCwClient.Verify(
+            x => x.PutMetricDataAsync(It.IsAny<PutMetricDataRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task PushMetric_withClient_usesDefaultNamespaceWhenNamespaceNotProvided()
+    {
+        Environment.SetEnvironmentVariable("AWS_CUSTOM_METRICS", "true");
+        Environment.SetEnvironmentVariable("METRICS_NAMESPACE", "App/UnitTests");
+
+        var helper = new AwsHelperV3(
+            _mockS3Client.Object,
+            _mockKmsClient.Object,
+            _mockSecretsManagerClient.Object,
+            _mockSsmClient.Object,
+            _mockCwClient.Object);
+
+        PutMetricDataRequest? capturedRequest = null;
+        _mockCwClient
+            .Setup(x => x.PutMetricDataAsync(It.IsAny<PutMetricDataRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<PutMetricDataRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(new PutMetricDataResponse { ResponseMetadata = new ResponseMetadata() });
+
+        var metricList = new List<MetricDatum>
+        {
+            new() { MetricName = "Latency", Unit = StandardUnit.Milliseconds, Value = 25 }
+        };
+
+        await helper.PushMetric(_mockCwClient.Object, metricList);
+
+        Assert.NotNull(capturedRequest);
+        Assert.Equal("App/UnitTests", capturedRequest!.Namespace);
+        Assert.Single(capturedRequest.MetricData);
+    }
+
+    [Fact]
+    public async Task PushMetric_byNameAndDimensions_defaultsUnitToCount()
+    {
+        Environment.SetEnvironmentVariable("AWS_CUSTOM_METRICS", "true");
+        Environment.SetEnvironmentVariable("METRICS_NAMESPACE", "App/UnitTests");
+
+        var helper = new AwsHelperV3(
+            _mockS3Client.Object,
+            _mockKmsClient.Object,
+            _mockSecretsManagerClient.Object,
+            _mockSsmClient.Object,
+            _mockCwClient.Object);
+
+        PutMetricDataRequest? capturedRequest = null;
+        _mockCwClient
+            .Setup(x => x.PutMetricDataAsync(It.IsAny<PutMetricDataRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<PutMetricDataRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(new PutMetricDataResponse { ResponseMetadata = new ResponseMetadata() });
+
+        var dimensions = new List<Dimension>
+        {
+            new() { Name = "Route", Value = "/health" }
+        };
+
+        await helper.PushMetric("HealthCheckCount", 3, dimensions, "App/Custom");
+
+        Assert.NotNull(capturedRequest);
+        Assert.Equal("App/Custom", capturedRequest!.Namespace);
+        Assert.Single(capturedRequest.MetricData);
+        Assert.Equal(StandardUnit.Count, capturedRequest.MetricData[0].Unit);
+        Assert.Equal("HealthCheckCount", capturedRequest.MetricData[0].MetricName);
+        Assert.Equal(3, capturedRequest.MetricData[0].Value);
+        Assert.Equal("Route", capturedRequest.MetricData[0].Dimensions[0].Name);
+        Assert.Equal("/health", capturedRequest.MetricData[0].Dimensions[0].Value);
+    }
+
+    [Fact]
+    public async Task PushMetric_byName_usesAppIdAsUniqueIdentifierWhenNotProvided()
+    {
+        Environment.SetEnvironmentVariable("AWS_CUSTOM_METRICS", "true");
+        Environment.SetEnvironmentVariable("APP_ID", "instance-123");
+
+        var helper = new AwsHelperV3(
+            _mockS3Client.Object,
+            _mockKmsClient.Object,
+            _mockSecretsManagerClient.Object,
+            _mockSsmClient.Object,
+            _mockCwClient.Object);
+
+        PutMetricDataRequest? capturedRequest = null;
+        _mockCwClient
+            .Setup(x => x.PutMetricDataAsync(It.IsAny<PutMetricDataRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<PutMetricDataRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(new PutMetricDataResponse { ResponseMetadata = new ResponseMetadata() });
+
+        await helper.PushMetric("WorkerHeartbeat", 1);
+
+        Assert.NotNull(capturedRequest);
+        Assert.Single(capturedRequest!.MetricData);
+        Assert.Single(capturedRequest.MetricData[0].Dimensions);
+        Assert.Equal("UniqueIdentifier", capturedRequest.MetricData[0].Dimensions[0].Name);
+        Assert.Equal("instance-123", capturedRequest.MetricData[0].Dimensions[0].Value);
+    }
 }

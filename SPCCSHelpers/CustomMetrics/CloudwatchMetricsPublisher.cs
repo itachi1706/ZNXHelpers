@@ -5,7 +5,6 @@ using Serilog;
 
 namespace SPCCSHelpers.CustomMetrics;
 
-// ReSharper disable once UnusedType.Global
 /// <summary>
 /// The background service that will push the metrics up to Cloudwatch. Initialize with
 /// <code>

@@ -3,7 +3,6 @@ using Amazon.CloudWatch.Model;
 
 namespace SPCCSHelpers.CustomMetrics;
 
-// ReSharper disable once ClassNeverInstantiated.Global
 public class CustomMetric
 {
     /// <summary>

@@ -2,7 +2,6 @@ using System.Threading.Channels;
 
 namespace SPCCSHelpers.CustomMetrics;
 
-// ReSharper disable once ClassNeverInstantiated.Global
 /// <summary>
 /// Queue for processing metrics. Initialize by calling the following to ensure all requests uses the same queue
 /// <code>

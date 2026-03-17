@@ -9,15 +9,15 @@ namespace SPCCSHelpers.CustomMetrics;
 /// <summary>
 /// The background service that will push the metrics up to Cloudwatch. Initialize with
 /// <code>
+///builder.Services.AddSingleton&lt;AwsHelperV3&gt;();
 /// builder.Services.AddHostedService&lt;CloudWatchMetricPublisher&gt;();
 /// </code>
 /// </summary>
-public class CloudwatchMetricsPublisher(MetricQueue queue) : BackgroundService
+public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper) : BackgroundService
 {
     private readonly bool _verboseLogEnabled = EnvHelper.GetBool("METRICS_VERBOSE_LOGGING", false);
 
     private readonly ILogger _logger = Log.ForContext<CloudwatchMetricsPublisher>();
-    private readonly AwsHelperV3 _awsHelper = new();
 
     // AWS Limit (Ref: https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html)
     private const int MaxBatchSize = 1000;
@@ -85,7 +85,7 @@ public class CloudwatchMetricsPublisher(MetricQueue queue) : BackgroundService
         VerboseLog($"Flushing {batch.Count} metrics to CloudWatch...");
         try
         {
-            await _awsHelper.PushMetric(batch.ToList());
+            await awsHelper.PushMetric(batch.ToList());
             batch.Clear();
         }
         catch (Exception e)

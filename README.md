@@ -19,7 +19,7 @@ SPCCSHelpers is a multi-targeted .NET helper library that centralises cross-cutt
 ### Install from NuGet
 
 ```bash
-dotnet add package SPCCSHelpers --version 3.1.1
+dotnet add package SPCCSHelpers --version 3.2.0
 ```
 
 ### Reference from Source

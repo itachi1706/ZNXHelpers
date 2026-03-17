@@ -10,7 +10,7 @@ namespace SPCCSHelpers.CustomMetrics;
 /// The background service that will push the metrics up to Cloudwatch. Initialize with
 /// <code>
 ///builder.Services.AddSingleton&lt;AwsHelperV3&gt;();
-/// builder.Services.AddHostedService&lt;CloudWatchMetricPublisher&gt;();
+/// builder.Services.AddHostedService&lt;CloudwatchMetricsPublisher&gt;();
 /// </code>
 /// </summary>
 public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper) : BackgroundService

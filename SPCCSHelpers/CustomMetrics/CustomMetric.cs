@@ -4,7 +4,6 @@ using Amazon.CloudWatch.Model;
 namespace SPCCSHelpers.CustomMetrics;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-
 public class CustomMetric
 {
     /// <summary>
@@ -27,7 +26,7 @@ public class CustomMetric
     /// Unit of metric measurement, defaults to Count
     /// </summary>
     public StandardUnit Unit { get; set; } = StandardUnit.Count;
-    
+
     /// <summary>
     /// Timestamp in milliseconds, defaults to current time
     /// </summary>

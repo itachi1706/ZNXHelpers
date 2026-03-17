@@ -27,4 +27,9 @@ public class CustomMetric
     /// Unit of metric measurement, defaults to Count
     /// </summary>
     public StandardUnit Unit { get; set; } = StandardUnit.Count;
+    
+    /// <summary>
+    /// Timestamp in milliseconds, defaults to current time
+    /// </summary>
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }

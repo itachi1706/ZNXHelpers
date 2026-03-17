@@ -5,7 +5,6 @@ using Serilog;
 namespace SPCCSHelpers.CustomMetrics;
 
 // ReSharper disable once UnusedType.Global
-
 /// <summary>
 /// The background service that will push the metrics up to Cloudwatch. Initialize with
 /// <code>
@@ -16,6 +15,8 @@ namespace SPCCSHelpers.CustomMetrics;
 public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper) : BackgroundService
 {
     private readonly bool _verboseLogEnabled = EnvHelper.GetBool("METRICS_VERBOSE_LOGGING", false);
+    private readonly bool _awsCustomMetrics = EnvHelper.GetBool("AWS_CUSTOM_METRICS", false);
+    private readonly bool _metricsAlwaysAddInstanceId = EnvHelper.GetBool("METRICS_ALWAYS_INSTANCE_ID", true);
 
     private readonly ILogger _logger = Log.ForContext<CloudwatchMetricsPublisher>();
 
@@ -34,6 +35,12 @@ public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (!_awsCustomMetrics)
+        {
+            _logger.Warning("AWS_CUSTOM_METRICS is disabled. Cloudwatch Metrics Publisher will not start");
+            return;
+        }
+
         _logger.Information("Cloudwatch Metrics Publisher started");
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
         var batch = new List<MetricDatum>();
@@ -44,10 +51,19 @@ public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper
             // Drain queue
             while (queue.Reader.TryRead(out var metricData))
             {
-                if (metricData.Dimensions.Count < 1)
+                var uidDimen = new Dimension
+                {
+                    Name = "UniqueIdentifier",
+                    Value = AwsHelperV3.GetUniqueInstanceName()
+                };
+                var dimensionList = metricData.Dimensions.ToList();
+                // If not in metricData.Dimensions, add it
+                // Also if always add is enabled, and it is not present, add as well
+                if (dimensionList.Count < 1 ||
+                    (_metricsAlwaysAddInstanceId && dimensionList.All(d => d.Name != uidDimen.Name)))
                 {
                     // Add default dimension
-                    metricData.Dimensions.Add(new Dimension
+                    dimensionList.Add(new Dimension
                     {
                         Name = "UniqueIdentifier",
                         Value = AwsHelperV3.GetUniqueInstanceName()
@@ -58,15 +74,14 @@ public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper
                 {
                     MetricName = metricData.Name,
                     Value = metricData.Value,
-                    Dimensions = metricData.Dimensions,
-                    Unit = metricData.Unit
+                    Dimensions = dimensionList,
+                    Unit = metricData.Unit,
+                    Timestamp = metricData.Timestamp
                 });
 
-                if (batch.Count >= MaxBatchSize)
-                {
-                    VerboseLog($"Batch size limit reached. Flushing batch of {batch.Count} metrics...");
-                    await FlushBatchAsync(batch);
-                }
+                if (batch.Count < MaxBatchSize) continue;
+                VerboseLog($"Batch size limit reached. Flushing batch of {batch.Count} metrics...");
+                await FlushBatchAsync(batch);
             }
 
             VerboseLog($"Batch size: {batch.Count}");

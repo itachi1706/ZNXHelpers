@@ -47,4 +47,4 @@ jobs:
           dotnet build
           dotnet test --no-build --collect:"XPlat Code Coverage;Format=cobertura,opencover" --verbosity normal
            mv SPCCSHelpers.Tests/TestResults/*/coverage.opencover.xml coverage.xml
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"

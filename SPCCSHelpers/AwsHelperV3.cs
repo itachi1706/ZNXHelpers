@@ -96,7 +96,7 @@ namespace SPCCSHelpers
         /// and finally falls back to the machine name if neither is set.
         /// </summary>
         /// <returns>A unique instance name as a string.</returns>
-        private static string GetUniqueInstanceName()
+        public static string GetUniqueInstanceName()
         {
             return EnvHelper.GetString("APP_ID") ??
                    EnvHelper.GetString("HOSTNAME") ??

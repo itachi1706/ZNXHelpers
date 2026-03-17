@@ -17,7 +17,7 @@
     <RepositoryUrl>https://github.com/itachi1706/SPCCSHelpers.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Copyright>2025 EMQ2 Technology Services Pte Ltd</Copyright>
-    <TargetFrameworks>net6.0;net7.0;net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

@@ -4,29 +4,23 @@ using Serilog;
 
 namespace SPCCSHelpers.CustomMetrics;
 
+// ReSharper disable once UnusedType.Global
+
 /// <summary>
 /// The background service that will push the metrics up to Cloudwatch. Initialize with
 /// <code>
 /// builder.Services.AddHostedService&lt;CloudWatchMetricPublisher&gt;();
 /// </code>
 /// </summary>
-public class CloudwatchMetricsPublisher : BackgroundService
+public class CloudwatchMetricsPublisher(MetricQueue queue) : BackgroundService
 {
     private readonly bool _verboseLogEnabled = EnvHelper.GetBool("METRICS_VERBOSE_LOGGING", false);
 
-    private readonly ILogger _logger;
-    private readonly MetricQueue _queue;
-    private readonly AwsHelperV3 _awsHelper;
+    private readonly ILogger _logger = Log.ForContext<CloudwatchMetricsPublisher>();
+    private readonly AwsHelperV3 _awsHelper = new();
 
     // AWS Limit (Ref: https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html)
     private const int MaxBatchSize = 1000;
-
-    public CloudwatchMetricsPublisher(MetricQueue queue)
-    {
-        _logger = Log.ForContext<CloudwatchMetricsPublisher>();
-        _queue = queue;
-        _awsHelper = new AwsHelperV3();
-    }
 
     private void VerboseLog(string? log)
     {
@@ -48,7 +42,7 @@ public class CloudwatchMetricsPublisher : BackgroundService
         {
             VerboseLog("Checking for metrics in queue...");
             // Drain queue
-            while (_queue.Reader.TryRead(out var metricData))
+            while (queue.Reader.TryRead(out var metricData))
             {
                 if (metricData.Dimensions.Count < 1)
                 {

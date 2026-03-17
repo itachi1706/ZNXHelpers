@@ -73,4 +73,3 @@ public class MetricQueueTests
         Assert.Null(readMetric);
     }
 }
-

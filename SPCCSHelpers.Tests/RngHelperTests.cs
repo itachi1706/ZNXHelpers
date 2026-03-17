@@ -20,6 +20,6 @@ public class RngHelperTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(size+8, result.Length);
+        Assert.Equal(size + 8, result.Length);
     }
 }

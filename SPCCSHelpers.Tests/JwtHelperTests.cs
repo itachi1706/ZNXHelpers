@@ -22,13 +22,14 @@ public class JwtHelperTests
         var key = System.Text.Encoding.ASCII.GetBytes(_testKey);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new Claim[] 
+            Subject = new ClaimsIdentity(new Claim[]
             {
                 new Claim(ClaimTypes.Name, "Test User"),
                 new Claim(ClaimTypes.Role, "Test Role"),
             }),
             Expires = DateTime.UtcNow.AddDays(7),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            SigningCredentials =
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
@@ -58,7 +59,7 @@ public class JwtHelperTests
         Assert.True(result);
         Assert.NotNull(claims);
         Assert.NotNull(securityToken);
-        
+
         // Act
         var result2 = _jwtHelper.ValidateJwt("not a token", tokenValidationParameters, out claims2, out securityToken2);
 
@@ -85,7 +86,7 @@ public class JwtHelperTests
 
         // Assert
         Assert.NotNull(result);
-        
+
         // Act
         var result2 = _jwtHelper.CreateJws(issuer, audience, claims, notBefore, expires, signingCertificate);
 

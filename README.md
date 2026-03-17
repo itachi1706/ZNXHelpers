@@ -136,6 +136,42 @@ using SPCCSHelpers.Exceptions;
 throw new HttpResponseException(StatusCodes.Status403Forbidden, "Missing permission");
 ```
 
+### Cloudwatch Custom Metrics Helper
+Initialize in Program.cs of your application the following. Note the order must follow these.
+```csharp
+builder.Services.AddSingleton<AwsHelperV3>(); // required
+builder.Services.AddSingleton<MetricQueue>(); // For common queue
+builder.Services.AddHostedService<CloudwatchMetricsPublisher>();
+```
+
+After that, in any of your classes requiring metrics injection, you can simply do the following:
+```csharp
+public class MyClass
+{
+    private readonly MetricQueue _metricQueue;
+
+    // MetricQueue is injected via DI and can be used to enqueue custom metrics
+    public MyClass(MetricQueue metricQueue)
+    {
+        _metricQueue = metricQueue;
+    }
+
+    public void MyMethod()
+    {
+        // Enqueue a custom metric with dimension
+        _metricQueue.EnqueueMetric("MyCustomMetric", 1, new Dictionary<string, string>
+        {
+            { "Environment", "Production" },
+            { "Service", "MyService" }
+        });
+        
+        // Enqueue a custom metric without dimension
+        _metricQueue.EnqueueMetric("MySimpleMetric", 1);
+    }
+}
+```
+
+
 ## Development
 
 ```bash

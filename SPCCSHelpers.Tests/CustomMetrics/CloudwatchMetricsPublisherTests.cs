@@ -10,6 +10,7 @@ using SPCCSHelpers.CustomMetrics;
 
 namespace SPCCSHelpers.Tests;
 
+[Collection("EnvironmentVariableDependent")]
 public class CloudwatchMetricsPublisherTests
 {
     [Fact]
@@ -139,4 +140,3 @@ public class CloudwatchMetricsPublisherTests
         Assert.DoesNotContain(sentMetric.Dimensions, d => d.Name == "UniqueIdentifier");
     }
 }
-

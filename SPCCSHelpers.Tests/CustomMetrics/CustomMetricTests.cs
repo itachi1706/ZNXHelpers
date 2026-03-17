@@ -157,4 +157,3 @@ public class CustomMetricTests
         Assert.Equal(timestamp, metric.Timestamp);
     }
 }
-

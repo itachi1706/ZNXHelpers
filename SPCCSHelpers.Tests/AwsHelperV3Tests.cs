@@ -567,4 +567,89 @@ public class AwsHelperV3Tests
 
         Assert.Equal(Environment.MachineName, result);
     }
+
+    [Fact]
+    public void GetCloudWatchClient_withInvalidProfile_throwsAmazonServiceException()
+    {
+        Environment.SetEnvironmentVariable("AWS_PROFILE_NAME", "profile-does-not-exist");
+        Environment.SetEnvironmentVariable("AWS_BASIC_AUTH", "false");
+        Environment.SetEnvironmentVariable("AWS_EKS_SA", "false");
+
+        var helper = new AwsHelperV3();
+
+        Assert.Throws<AmazonServiceException>(() => helper.GetCloudWatchClient());
+    }
+
+    [Fact]
+    public void GetBasicAwsCredentials_returnsBasicCredentialsWhenKeysArePresent()
+    {
+        Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "ak-test");
+        Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "sk-test");
+
+        var method = typeof(AwsHelperV3).GetMethod("GetBasicAwsCredentials", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var credentials = method!.Invoke(null, null);
+
+        Assert.IsType<BasicAWSCredentials>(credentials);
+    }
+
+    [Fact]
+    public void GetBasicAwsCredentials_throwsWhenKeysMissing()
+    {
+        Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", null);
+        Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", null);
+
+        var method = typeof(AwsHelperV3).GetMethod("GetBasicAwsCredentials", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var ex = Assert.Throws<TargetInvocationException>(() => method!.Invoke(null, null));
+
+        Assert.IsType<AmazonServiceException>(ex.InnerException);
+        Assert.Equal("Failed to get basic AWS Credentials", ex.InnerException!.Message);
+    }
+
+    [Fact]
+    public async Task GetStringFromParameterStoreSecureString_throwsWhenCipherTextIsNotBase64()
+    {
+        _mockSsmClient
+            .Setup(x => x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetParameterResponse
+            {
+                Parameter = new Parameter { Value = "not-base64", ARN = "arn:aws:ssm:ap-southeast-1:123:param/x" },
+                ResponseMetadata = new ResponseMetadata()
+            });
+
+        await Assert.ThrowsAsync<FormatException>(() =>
+            _awsHelperV3.GetStringFromParameterStoreSecureString("param", false));
+    }
+
+    [Fact]
+    public async Task GetSecureStringFromParameterStore_throwsWhenCipherTextIsNotBase64()
+    {
+        _mockSsmClient
+            .Setup(x => x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetParameterResponse
+            {
+                Parameter = new Parameter { Value = "not-base64", ARN = "arn:aws:ssm:ap-southeast-1:123:param/y" },
+                ResponseMetadata = new ResponseMetadata()
+            });
+
+        await Assert.ThrowsAsync<FormatException>(() => _awsHelperV3.GetSecureStringFromParameterStore("param"));
+    }
+
+    [Fact]
+    public async Task GetSecretFromSecretsManager_throwsWhenSecretStringIsInvalidJson()
+    {
+        _mockSecretsManagerClient
+            .Setup(x => x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetSecretValueResponse
+            {
+                SecretString = "not-json",
+                ResponseMetadata = new ResponseMetadata()
+            });
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _awsHelperV3.GetSecretFromSecretsManager("invalid-json-secret"));
+    }
 }

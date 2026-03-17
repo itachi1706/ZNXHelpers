@@ -4,8 +4,8 @@ namespace SPCCSHelpers;
 
 public class NdiHelper
 {
-    private  readonly ILogger _logger = Log.ForContext<NdiHelper>();
-    
+    private readonly ILogger _logger = Log.ForContext<NdiHelper>();
+
     public async Task<string?> CallNdiEndpoint(string baseUrl, string endpointPath, string accessToken,
         bool lambdaHeaderMode, bool isPostMethod = true)
     {

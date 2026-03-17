@@ -3,11 +3,12 @@
   <PropertyGroup>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>3.1.1</PackageVersion>
+    <PackageVersion>3.2.0</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>EMQ2</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>Add status code for repsonse</PackageReleaseNotes>
+    <PackageReleaseNotes>- Add cloudwatch custom metrics handling
+- Refactored solution</PackageReleaseNotes>
     <Summary>Helper Class for SPC Common Services</Summary>
     <Title>SPCCS Helpers</Title>
     <Description>Common Helper class for various common functions</Description>
@@ -17,7 +18,7 @@
     <RepositoryUrl>https://github.com/itachi1706/SPCCSHelpers.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Copyright>2025 EMQ2 Technology Services Pte Ltd</Copyright>
-    <TargetFrameworks>net6.0;net7.0;net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -37,15 +38,17 @@
     <None Remove="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="4.0.17.3" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.7.1" />
-    <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.4.5" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.8.7" />
-    <PackageReference Include="AWSSDK.Core" Version="4.0.3.15" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.8" />
+    <PackageReference Include="AWSSDK.CloudWatch" Version="4.0.8.2" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.19" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.7.3" />
+    <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.4.9" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.9.3" />
+    <PackageReference Include="AWSSDK.Core" Version="4.0.3.18" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.12" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.5" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />

@@ -36,11 +36,14 @@ namespace SPCCSHelpers
 
         /** TESTS ONLY **/
         private readonly AmazonS3Client? _testS3Client;
+
         private readonly AmazonKeyManagementServiceClient? _testKmsClient;
         private readonly AmazonSecretsManagerClient? _testSecretsManagerClient;
         private readonly AmazonSimpleSystemsManagementClient? _testSimpleSystemsManagementClient;
         private readonly bool _testMode;
-        public AwsHelperV3(AmazonS3Client s3Client, AmazonKeyManagementServiceClient kmsClient, AmazonSecretsManagerClient smClient, AmazonSimpleSystemsManagementClient ssmClient)
+
+        public AwsHelperV3(AmazonS3Client s3Client, AmazonKeyManagementServiceClient kmsClient,
+            AmazonSecretsManagerClient smClient, AmazonSimpleSystemsManagementClient ssmClient)
         {
             _logger = Log.ForContext<AwsHelperV3>();
             _testS3Client = s3Client;
@@ -56,6 +59,7 @@ namespace SPCCSHelpers
         }
 
         #region Utils
+
         private void VerboseLog(string? log)
         {
             if (log == null) return; // NO-OP
@@ -64,21 +68,24 @@ namespace SPCCSHelpers
                 _logger.Debug("{Log}", log);
             }
         }
-        
-        private void LogMetadata(ResponseMetadata metadata, String tag) 
+
+        private void LogMetadata(ResponseMetadata metadata, String tag)
         {
             if (_awsRequestIdLoggingEnabled)
             {
                 _logger.Information("[{Tag}] Request ID: {RequestId}", tag, metadata.RequestId);
             }
+
             if (_awsMetadataLoggingEnabled)
             {
                 _logger.Information("[{Tag}] Metadata: {@Metadata}", tag, metadata.Metadata);
             }
         }
+
         #endregion
 
         #region AWS Credentials
+
         /********** CREDENTIALS **********/
         private static AWSCredentials GetAwsCredentials(string? profileName)
         {
@@ -87,6 +94,7 @@ namespace SPCCSHelpers
             {
                 return awsCredentials;
             }
+
             throw new AmazonServiceException("Failed to get AWS credentials");
         }
 
@@ -100,7 +108,8 @@ namespace SPCCSHelpers
             var tk = debugCreds.Token ?? "-";
             VerboseLog($"[GetAwsCredentialsSts] Creds Async gotten WebIdentity. {ak}, {sk}, {tk}");
 
-            IAmazonSecurityTokenService stsClient = new AmazonSecurityTokenServiceClient(Amazon.RegionEndpoint.APSoutheast1);
+            IAmazonSecurityTokenService stsClient =
+                new AmazonSecurityTokenServiceClient(Amazon.RegionEndpoint.APSoutheast1);
             AWSCredentials stsUser;
             using (var client = stsClient)
             {
@@ -110,6 +119,7 @@ namespace SPCCSHelpers
                 VerboseLog("[GetAwsCredentialsSts] Obtained STS Session Token");
                 stsUser = token.Credentials;
             }
+
             VerboseLog("[GetAwsCredentialsSts] Returning STS User");
             return stsUser;
         }
@@ -145,16 +155,19 @@ namespace SPCCSHelpers
 
             return null;
         }
+
         #endregion
 
         #region AWS Clients
+
         /********** CLIENTS **********/
         private AmazonKeyManagementServiceClient GetKmsClient()
         {
             if (_testMode) return _testKmsClient!;
-            return _profileName == null ?
-                GetKmsClientProd() :
-                new AmazonKeyManagementServiceClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
+            return _profileName == null
+                ? GetKmsClientProd()
+                : new AmazonKeyManagementServiceClient(GetAwsCredentials(_profileName),
+                    Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonKeyManagementServiceClient GetKmsClientProd()
@@ -173,9 +186,9 @@ namespace SPCCSHelpers
         private AmazonS3Client GetS3Client()
         {
             if (_testMode) return _testS3Client!;
-            return _profileName == null ?
-                GetS3ClientProd() :
-                new AmazonS3Client(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
+            return _profileName == null
+                ? GetS3ClientProd()
+                : new AmazonS3Client(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonS3Client GetS3ClientProd()
@@ -194,9 +207,9 @@ namespace SPCCSHelpers
         private AmazonSecretsManagerClient GetSecretsManagerClient()
         {
             if (_testMode) return _testSecretsManagerClient!;
-            return _profileName == null ?
-                GetSecretsManagerClientProd() :
-                new AmazonSecretsManagerClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
+            return _profileName == null
+                ? GetSecretsManagerClientProd()
+                : new AmazonSecretsManagerClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSecretsManagerClient GetSecretsManagerClientProd()
@@ -215,9 +228,10 @@ namespace SPCCSHelpers
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
         {
             if (_testMode) return _testSimpleSystemsManagementClient!;
-            return _profileName == null ?
-                GetSimpleSystemsManagementClientProd() :
-                new AmazonSimpleSystemsManagementClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
+            return _profileName == null
+                ? GetSimpleSystemsManagementClientProd()
+                : new AmazonSimpleSystemsManagementClient(GetAwsCredentials(_profileName),
+                    Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClientProd()
@@ -232,10 +246,13 @@ namespace SPCCSHelpers
             VerboseLog("[GetSimpleSystemsManagementClientProd] Returning normal prod client");
             return new AmazonSimpleSystemsManagementClient(Amazon.RegionEndpoint.APSoutheast1);
         }
+
         #endregion
 
         #region AWS Methods
+
         #region AWS Parameter Store
+
         /// <summary>
         /// GET string from AWS Parameter Store
         /// </summary>
@@ -272,7 +289,8 @@ namespace SPCCSHelpers
         /// <returns></returns>
         public async Task<string?> GetStringFromParameterStoreSecureString(string parameterName, bool withDecryption)
         {
-            _logger.Debug("GetStringFromParameterStoreSecureString({ParameterName}, {Decryption})", parameterName, withDecryption);
+            _logger.Debug("GetStringFromParameterStoreSecureString({ParameterName}, {Decryption})", parameterName,
+                withDecryption);
             using var ssmClient = GetSimpleSystemsManagementClient();
 
             var request = new GetParameterRequest
@@ -297,6 +315,7 @@ namespace SPCCSHelpers
                 VerboseLog("[GetStringFromParameterStoreSecureString] Returned String that is decrypted");
                 return response.Parameter.Value;
             }
+
             VerboseLog("[GetStringFromParameterStoreSecureString] Decrypting Secure String");
 
             var encryptedValue = response.Parameter.Value;
@@ -308,10 +327,12 @@ namespace SPCCSHelpers
             {
                 KeyId = _kmsKeyId,
                 CiphertextBlob = memoryStream,
-                EncryptionContext = new Dictionary<string, string>  // For parameter store secure string, add context to decrypt successfully
-                {
-                    { "PARAMETER_ARN", response.Parameter.ARN }
-                }
+                EncryptionContext =
+                    new
+                        Dictionary<string, string> // For parameter store secure string, add context to decrypt successfully
+                        {
+                            { "PARAMETER_ARN", response.Parameter.ARN }
+                        }
             };
 
             VerboseLog("[GetStringFromParameterStoreSecureString] Getting KMS Client");
@@ -362,10 +383,12 @@ namespace SPCCSHelpers
             {
                 KeyId = _kmsKeyId,
                 CiphertextBlob = memoryStream,
-                EncryptionContext = new Dictionary<string, string>  // For parameter store secure string, add context to decrypt successfully
-                {
-                    {"PARAMETER_ARN", response.Parameter.ARN }
-                }
+                EncryptionContext =
+                    new
+                        Dictionary<string, string> // For parameter store secure string, add context to decrypt successfully
+                        {
+                            { "PARAMETER_ARN", response.Parameter.ARN }
+                        }
             };
 
             VerboseLog("[GetSecureStringFromParameterStore] Getting KMS Client");
@@ -379,19 +402,23 @@ namespace SPCCSHelpers
             var secureString = new SecureString();
 
             using var reader = new StreamReader(decryptResponse.Plaintext);
-            VerboseLog("[GetSecureStringFromParameterStore] Converted decrypted string to a stream for insertion to SecureString");
+            VerboseLog(
+                "[GetSecureStringFromParameterStore] Converted decrypted string to a stream for insertion to SecureString");
 
             while (reader.Peek() >= 0)
             {
                 secureString.AppendChar((char)reader.Read());
             }
+
             VerboseLog("[GetSecureStringFromParameterStore] Added to SecureString");
 
             return secureString;
         }
+
         #endregion
 
         #region AWS S3
+
         /// <summary>
         /// GET file from AWS S3
         /// </summary>
@@ -426,7 +453,7 @@ namespace SPCCSHelpers
             VerboseLog("[GetFileFromS3] Copied object to memory stream");
             return inputStream.ToArray();
         }
-        
+
         public async Task<bool> PutFileToS3(byte[] file, string filePath)
         {
             VerboseLog("[PutFileToS3] Putting file into S3 with Default Bucket with default content (text/plain)");
@@ -455,7 +482,8 @@ namespace SPCCSHelpers
             };
 
             VerboseLog("[PutFileToS3] Uploading to S3 bucket...");
-            try {
+            try
+            {
                 var response = await s3Client.PutObjectAsync(request);
                 LogMetadata(response.ResponseMetadata, "PutFileToS3");
                 if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
@@ -466,18 +494,22 @@ namespace SPCCSHelpers
 
                 VerboseLog("[PutFileToS3] Failed to upload to S3 bucket");
                 return false;
-            } catch (AmazonS3Exception ex) {
+            }
+            catch (AmazonS3Exception ex)
+            {
                 VerboseLog("[PutFileToS3] Failed to upload to S3 bucket. Exception: " + ex.Message);
                 VerboseLog("[PutFileToS3] Request ID: " + ex.RequestId);
-                if (_awsPrintStackTrace) {
+                if (_awsPrintStackTrace)
+                {
                     VerboseLog(ex.StackTrace);
                 }
+
                 return false;
             }
         }
 
         public string? GeneratePreSignedS3UrlDownload(string filePath, long expiryMin)
-	    {
+        {
             VerboseLog("[PutFileToS3] Getting Pre Signed URL with Default Bucket");
             return GeneratePreSignedS3UrlDownload(filePath, expiryMin, _s3BucketName);
         }
@@ -503,32 +535,38 @@ namespace SPCCSHelpers
             };
 
             try
-			{
+            {
                 VerboseLog("[GeneratePreSignedS3URLDownload] Retrieving Pre-Signed URL");
                 var url = s3Client.GetPreSignedURL(req);
                 return url;
-            } catch (AmazonS3Exception e)
-			{
-                VerboseLog($"[GeneratePreSignedS3URLDownload] Error encountered on server generating pre-signed URL. Message: '{e.Message}' when writing an object");
-                VerboseLog("[GeneratePreSignedS3URLDownload] Request ID: " + e.RequestId);
-			} catch (Exception e)
-			{
-                VerboseLog($"[GeneratePreSignedS3URLDownload] Unknown Exception encountered generating pre-signed URL. Message: '{e.Message}' when writing an object");
             }
-            
+            catch (AmazonS3Exception e)
+            {
+                VerboseLog(
+                    $"[GeneratePreSignedS3URLDownload] Error encountered on server generating pre-signed URL. Message: '{e.Message}' when writing an object");
+                VerboseLog("[GeneratePreSignedS3URLDownload] Request ID: " + e.RequestId);
+            }
+            catch (Exception e)
+            {
+                VerboseLog(
+                    $"[GeneratePreSignedS3URLDownload] Unknown Exception encountered generating pre-signed URL. Message: '{e.Message}' when writing an object");
+            }
+
             return null;
-		}
+        }
+
         #endregion
 
         #region AWS Secrets Manager
-        
+
         /// <summary>
         /// Get secrets from AWS secrets manager using default secret name
         /// </summary>
         /// <returns></returns>
         public async Task<Dictionary<string, string>?> GetSecretFromSecretsManager()
         {
-            VerboseLog($"[GetSecretFromSecretsManager] Getting secrets from AWS secrets manager using default secret name {_secretName}.");
+            VerboseLog(
+                $"[GetSecretFromSecretsManager] Getting secrets from AWS secrets manager using default secret name {_secretName}.");
             return await GetSecretFromSecretsManager(_secretName);
         }
 
@@ -573,10 +611,12 @@ namespace SPCCSHelpers
             catch (ResourceNotFoundException ex2)
             {
                 _logger.Error(ex2, "Unable to get secret from secrets manager");
-                return null;   
+                return null;
             }
         }
+
         #endregion
+
         #endregion
     }
 }

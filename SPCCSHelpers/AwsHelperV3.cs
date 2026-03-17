@@ -13,6 +13,8 @@ using Newtonsoft.Json;
 using Serilog;
 using System.Security;
 using System.Text;
+using Amazon.CloudWatch;
+using Amazon.CloudWatch.Model;
 using ResourceNotFoundException = Amazon.SimpleSystemsManagement.Model.ResourceNotFoundException;
 
 // ReSharper disable UnusedMember.Global
@@ -32,7 +34,10 @@ namespace SPCCSHelpers
         private readonly bool _awsPrintStackTrace = EnvHelper.GetBool("AWS_PRINT_STACK_TRACE", false);
         private readonly bool _awsRequestIdLoggingEnabled = EnvHelper.GetBool("AWS_REQUEST_ID_DEBUG", false);
         private readonly bool _awsMetadataLoggingEnabled = EnvHelper.GetBool("AWS_RESPONSE_METADATA_DEBUG", false);
+        private readonly bool _awsCustomMetrics = EnvHelper.GetBool("AWS_CUSTOM_METRICS", false);
         private readonly ILogger _logger;
+
+        private readonly string _defaultMetricsNamespace = EnvHelper.GetString("METRICS_NAMESPACE", "App/SPCCSGateway");
 
         /** TESTS ONLY **/
         private readonly AmazonS3Client? _testS3Client;
@@ -40,16 +45,19 @@ namespace SPCCSHelpers
         private readonly AmazonKeyManagementServiceClient? _testKmsClient;
         private readonly AmazonSecretsManagerClient? _testSecretsManagerClient;
         private readonly AmazonSimpleSystemsManagementClient? _testSimpleSystemsManagementClient;
+        private readonly AmazonCloudWatchClient? _testCloudWatchClient;
         private readonly bool _testMode;
 
         public AwsHelperV3(AmazonS3Client s3Client, AmazonKeyManagementServiceClient kmsClient,
-            AmazonSecretsManagerClient smClient, AmazonSimpleSystemsManagementClient ssmClient)
+            AmazonSecretsManagerClient smClient, AmazonSimpleSystemsManagementClient ssmClient,
+            AmazonCloudWatchClient cwClient)
         {
             _logger = Log.ForContext<AwsHelperV3>();
             _testS3Client = s3Client;
             _testKmsClient = kmsClient;
             _testSecretsManagerClient = smClient;
             _testSimpleSystemsManagementClient = ssmClient;
+            _testCloudWatchClient = cwClient;
             _testMode = true;
         }
 
@@ -82,6 +90,19 @@ namespace SPCCSHelpers
             }
         }
 
+        /// <summary>
+        /// Gets a unique instance name for the application, which can be used for metrics reporting.
+        /// It first checks for the "APP_ID" environment variable, then "HOSTNAME",
+        /// and finally falls back to the machine name if neither is set.
+        /// </summary>
+        /// <returns>A unique instance name as a string.</returns>
+        private static string GetUniqueInstanceName()
+        {
+            return EnvHelper.GetString("APP_ID") ??
+                   EnvHelper.GetString("HOSTNAME") ??
+                   Environment.MachineName;
+        }
+
         #endregion
 
         #region AWS Credentials
@@ -102,7 +123,7 @@ namespace SPCCSHelpers
         {
             var credentialsDebug = AssumeRoleWithWebIdentityCredentials.FromEnvironmentVariables();
             VerboseLog("[GetAwsCredentialsSts] Getting Creds Async WebIdentity");
-            var debugCreds = credentialsDebug.GetCredentials();
+            var debugCreds = await credentialsDebug.GetCredentialsAsync();
             var ak = debugCreds.AccessKey ?? "-";
             var sk = debugCreds.SecretKey ?? "-";
             var tk = debugCreds.Token ?? "-";
@@ -147,7 +168,8 @@ namespace SPCCSHelpers
                 VerboseLog("[GetProdCredentials] Returning STS prod client");
                 return user.Result;
             }
-            else if (_isAwsBasicAuth)
+
+            if (_isAwsBasicAuth)
             {
                 VerboseLog("[GetProdCredentials] Getting Basic Auth credentials");
                 return GetBasicAwsCredentials();
@@ -245,6 +267,27 @@ namespace SPCCSHelpers
 
             VerboseLog("[GetSimpleSystemsManagementClientProd] Returning normal prod client");
             return new AmazonSimpleSystemsManagementClient(Amazon.RegionEndpoint.APSoutheast1);
+        }
+
+        private AmazonCloudWatchClient GetCloudWatchClient()
+        {
+            if (_testMode) return _testCloudWatchClient!;
+            return _profileName == null
+                ? GetCloudWatchClientProd()
+                : new AmazonCloudWatchClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
+        }
+
+        private AmazonCloudWatchClient GetCloudWatchClientProd()
+        {
+            var credentials = GetProdCredentials();
+            if (credentials != null)
+            {
+                VerboseLog("[GetCloudWatchClientProd] Returning client with credentials");
+                return new AmazonCloudWatchClient(credentials, Amazon.RegionEndpoint.APSoutheast1);
+            }
+
+            VerboseLog("[GetCloudWatchClientProd] Returning normal prod client");
+            return new AmazonCloudWatchClient(Amazon.RegionEndpoint.APSoutheast1);
         }
 
         #endregion
@@ -613,6 +656,101 @@ namespace SPCCSHelpers
                 _logger.Error(ex2, "Unable to get secret from secrets manager");
                 return null;
             }
+        }
+
+        #endregion
+
+        #region AWS Cloudwatch Metrics
+
+        /// <summary>
+        /// Pushes a list of metrics to AWS CloudWatch under the specified namespace.
+        /// If custom metrics are disabled via configuration,
+        /// the method will log a message and skip pushing to CloudWatch.
+        /// The method uses the AWS SDK to send the metric data and logs the number of metrics pushed along with the namespace used.
+        /// </summary>
+        /// <param name="metricList">List of metrics to push</param>
+        /// <param name="metricNamespace">Optional. The namespace for the metric. If not provided, it defaults to a predefined namespace from environment variables or "App/SPCCSGateway".</param>
+        public async Task PushMetric(List<MetricDatum> metricList, string? metricNamespace = null)
+        {
+            if (!_awsCustomMetrics)
+            {
+                VerboseLog("[PushMetric] Custom metrics disabled, skipping push to CloudWatch");
+                return;
+            }
+
+            // Handle defaults
+            metricNamespace ??= _defaultMetricsNamespace;
+
+            using var cwClient = GetCloudWatchClient();
+            await cwClient.PutMetricDataAsync(new PutMetricDataRequest
+            {
+                Namespace = metricNamespace,
+                MetricData = metricList
+            });
+            VerboseLog($"[PushMetric] Pushed {metricList.Count} metrics to CloudWatch in namespace {metricNamespace}");
+        }
+
+        /// <summary>
+        /// Pushes a single metric to AWS CloudWatch with optional namespace, unique identifier, and metric unit.
+        /// If the metric unit is not provided, it defaults to "Count". The unique identifier dimension allows for distinguishing
+        /// metrics from different instances or sources, and if not provided, it will use a unique
+        /// instance name derived from environment variables or machine name.
+        /// </summary>
+        /// <param name="metricName">The name of the metric to push.</param>
+        /// <param name="value">The value of the metric.</param>
+        /// <param name="dimensions">Dimension List to pass in</param>
+        /// <param name="metricNamespace">Optional. The namespace for the metric. If not provided, it defaults to a predefined namespace from environment variables or "App/SPCCSGateway".</param>
+        /// <param name="metricUnit">Optional. The unit of the metric. If not provided, it defaults to "Count".</param>
+        public async Task PushMetric(string metricName, double value, List<Dimension> dimensions,
+            string? metricNamespace = null, StandardUnit? metricUnit = null)
+        {
+            // Handle default
+            if (metricUnit == null)
+            {
+                metricUnit = StandardUnit.Count;
+            }
+
+            var metricList = new List<MetricDatum>
+            {
+                new()
+                {
+                    MetricName = metricName,
+                    Unit = metricUnit,
+                    Value = value,
+                    Dimensions = dimensions
+                }
+            };
+
+            await PushMetric(metricList, metricNamespace);
+            VerboseLog(
+                $"[PushMetric] Pushed metric {metricName} with value {value} to CloudWatch in namespace {metricNamespace}");
+        }
+
+        /// <summary>
+        /// Pushes a single metric to AWS CloudWatch with optional namespace, unique identifier, and metric unit.
+        /// If the metric unit is not provided, it defaults to "Count". The unique identifier dimension allows for distinguishing
+        /// metrics from different instances or sources, and if not provided, it will use a unique
+        /// instance name derived from environment variables or machine name.
+        ///
+        /// This will pass in just the Instance name as Dimension
+        /// </summary>
+        /// <param name="metricName">The name of the metric to push.</param>
+        /// <param name="value">The value of the metric.</param>
+        /// <param name="metricNamespace">Optional. The namespace for the metric. If not provided, it defaults to a predefined namespace from environment variables or "App/SPCCSGateway".</param>
+        /// <param name="uniqueIdentifier">Optional. A unique identifier for the metric dimension. If not provided, it defaults to a unique instance name derived from environment variables or machine name.</param>
+        /// <param name="metricUnit">Optional. The unit of the metric. If not provided, it defaults to "Count".</param>
+        public async Task PushMetric(string metricName, double value, string? metricNamespace = null,
+            string? uniqueIdentifier = null, StandardUnit? metricUnit = null)
+        {
+            var dimenList = new List<Dimension>
+            {
+                new()
+                {
+                    Name = "UniqueIdentifier",
+                    Value = uniqueIdentifier ?? GetUniqueInstanceName()
+                }
+            };
+            await PushMetric(metricName, value, dimenList, metricNamespace, metricUnit);
         }
 
         #endregion

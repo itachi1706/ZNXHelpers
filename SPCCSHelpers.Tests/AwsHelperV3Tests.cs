@@ -2,6 +2,7 @@ using System.Net;
 using System.Security;
 using System.Text;
 using Amazon;
+using Amazon.CloudWatch;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Runtime;
@@ -22,6 +23,7 @@ public class AwsHelperV3Tests
     private readonly Mock<AmazonKeyManagementServiceClient> _mockKmsClient;
     private readonly Mock<AmazonSecretsManagerClient> _mockSecretsManagerClient;
     private readonly Mock<AmazonSimpleSystemsManagementClient> _mockSsmClient;
+    private readonly Mock<AmazonCloudWatchClient> _mockCwClient;
 
     public AwsHelperV3Tests()
     {
@@ -38,7 +40,8 @@ public class AwsHelperV3Tests
         _mockKmsClient = new Mock<AmazonKeyManagementServiceClient>(RegionEndpoint.APSoutheast1);
         _mockSecretsManagerClient = new Mock<AmazonSecretsManagerClient>(RegionEndpoint.APSoutheast1);
         _mockSsmClient = new Mock<AmazonSimpleSystemsManagementClient>(RegionEndpoint.APSoutheast1);
-        _awsHelperV3 = new AwsHelperV3(_mockS3Client.Object, _mockKmsClient.Object, _mockSecretsManagerClient.Object, _mockSsmClient.Object);
+        _mockCwClient = new Mock<AmazonCloudWatchClient>(RegionEndpoint.APSoutheast1);
+        _awsHelperV3 = new AwsHelperV3(_mockS3Client.Object, _mockKmsClient.Object, _mockSecretsManagerClient.Object, _mockSsmClient.Object, _mockCwClient.Object);
     }
 
     [Fact]

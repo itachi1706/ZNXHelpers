@@ -139,4 +139,3 @@ public class CloudwatchMetricsPublisherTests
         Assert.DoesNotContain(sentMetric.Dimensions, d => d.Name == "UniqueIdentifier");
     }
 }
-

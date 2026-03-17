@@ -20,14 +20,17 @@ namespace SPCCSHelpers
         private readonly string? _kmsKeyId = EnvHelper.GetString("KMS_KEY_ID");
         private readonly string? _profileName = EnvHelper.GetString("AWS_PROFILE_NAME");
         private readonly string? _s3BucketName = EnvHelper.GetString("S3_BUCKET_NAME");
-        
+
         /** TESTS ONLY **/
         private readonly AmazonS3Client? _testS3Client;
+
         private readonly AmazonKeyManagementServiceClient? _testKmsClient;
         private readonly AmazonSecretsManagerClient? _testSecretsManagerClient;
         private readonly AmazonSimpleSystemsManagementClient? _testSimpleSystemsManagementClient;
         private readonly bool _testMode;
-        public AwsHelperV2(AmazonS3Client s3Client, AmazonKeyManagementServiceClient kmsClient, AmazonSecretsManagerClient smClient, AmazonSimpleSystemsManagementClient ssmClient)
+
+        public AwsHelperV2(AmazonS3Client s3Client, AmazonKeyManagementServiceClient kmsClient,
+            AmazonSecretsManagerClient smClient, AmazonSimpleSystemsManagementClient ssmClient)
         {
             _testS3Client = s3Client;
             _testKmsClient = kmsClient;
@@ -37,6 +40,7 @@ namespace SPCCSHelpers
         }
 
         #region AWS Credentials
+
         /********** CREDENTIALS **********/
         private static AWSCredentials GetAwsCredentials(string? profileName)
         {
@@ -45,46 +49,53 @@ namespace SPCCSHelpers
             {
                 return awsCredentials;
             }
+
             throw new AmazonServiceException("Failed to get AWS credentials");
         }
+
         #endregion
 
         #region AWS Clients
+
         /********** CLIENTS **********/
         private AmazonKeyManagementServiceClient GetKmsClient()
         {
             if (_testMode) return _testKmsClient!;
-            return _profileName == null ?
-                new AmazonKeyManagementServiceClient(Amazon.RegionEndpoint.APSoutheast1) :
-                new AmazonKeyManagementServiceClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
+            return _profileName == null
+                ? new AmazonKeyManagementServiceClient(Amazon.RegionEndpoint.APSoutheast1)
+                : new AmazonKeyManagementServiceClient(GetAwsCredentials(_profileName),
+                    Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonS3Client GetS3Client()
         {
             if (_testMode) return _testS3Client!;
-            return _profileName == null ?
-                new AmazonS3Client(Amazon.RegionEndpoint.APSoutheast1) :
-                new AmazonS3Client(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
+            return _profileName == null
+                ? new AmazonS3Client(Amazon.RegionEndpoint.APSoutheast1)
+                : new AmazonS3Client(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSecretsManagerClient GetSecretsManagerClient()
         {
             if (_testMode) return _testSecretsManagerClient!;
-            return _profileName == null ?
-                new AmazonSecretsManagerClient(Amazon.RegionEndpoint.APSoutheast1) :
-                new AmazonSecretsManagerClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
+            return _profileName == null
+                ? new AmazonSecretsManagerClient(Amazon.RegionEndpoint.APSoutheast1)
+                : new AmazonSecretsManagerClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
         }
 
         private AmazonSimpleSystemsManagementClient GetSimpleSystemsManagementClient()
         {
             if (_testMode) return _testSimpleSystemsManagementClient!;
-            return _profileName == null ?
-                new AmazonSimpleSystemsManagementClient(Amazon.RegionEndpoint.APSoutheast1) :
-                new AmazonSimpleSystemsManagementClient(GetAwsCredentials(_profileName), Amazon.RegionEndpoint.APSoutheast1);
+            return _profileName == null
+                ? new AmazonSimpleSystemsManagementClient(Amazon.RegionEndpoint.APSoutheast1)
+                : new AmazonSimpleSystemsManagementClient(GetAwsCredentials(_profileName),
+                    Amazon.RegionEndpoint.APSoutheast1);
         }
+
         #endregion
 
         #region AWS Methods
+
         /// <summary>
         /// GET string from AWS Parameter Store
         /// </summary>
@@ -120,7 +131,8 @@ namespace SPCCSHelpers
         public async Task<string?> GetStringFromParameterStoreSecureString(string parameterName, bool withDecryption)
         {
             var logger = Log.ForContext<AwsHelperV2>();
-            logger.Debug("GetStringFromParameterStoreSecureString({ParameterName}, {WithDecryption})", parameterName, withDecryption);
+            logger.Debug("GetStringFromParameterStoreSecureString({ParameterName}, {WithDecryption})", parameterName,
+                withDecryption);
             using var ssmClient = GetSimpleSystemsManagementClient();
 
             var request = new GetParameterRequest
@@ -150,7 +162,8 @@ namespace SPCCSHelpers
             {
                 KeyId = _kmsKeyId,
                 CiphertextBlob = memoryStream,
-                EncryptionContext = new Dictionary<string, string>  // For parameter store secure string, add context to decrypt successfully
+                // For parameter store secure string, add context to decrypt successfully
+                EncryptionContext = new Dictionary<string, string>
                 {
                     { "PARAMETER_ARN", response.Parameter.ARN }
                 }
@@ -197,9 +210,10 @@ namespace SPCCSHelpers
             {
                 KeyId = _kmsKeyId,
                 CiphertextBlob = memoryStream,
-                EncryptionContext = new Dictionary<string, string>  // For parameter store secure string, add context to decrypt successfully
+                // For parameter store secure string, add context to decrypt successfully
+                EncryptionContext = new Dictionary<string, string>
                 {
-                    {"PARAMETER_ARN", response.Parameter.ARN }
+                    { "PARAMETER_ARN", response.Parameter.ARN }
                 }
             };
 
@@ -289,6 +303,7 @@ namespace SPCCSHelpers
                 return null;
             }
         }
+
         #endregion
     }
 }

@@ -2,12 +2,14 @@
 {
     public static class EnvHelper
     {
-        public static bool IsDevelopmentEnvironment() {
+        public static bool IsDevelopmentEnvironment()
+        {
             var environment = GetString("ASPNETCORE_ENVIRONMENT", "Development");
             return environment.ToLower() == "development";
         }
 
-        public static bool IsProductionEnvironment() {
+        public static bool IsProductionEnvironment()
+        {
             var environment = GetString("ASPNETCORE_ENVIRONMENT", "Development");
             return environment.ToLower() == "production";
         }
@@ -24,6 +26,7 @@
             {
                 envRes = defaultValue;
             }
+
             return envRes;
         }
 
@@ -118,6 +121,7 @@
             {
                 return null;
             }
+
             return Array.ConvertAll(envVar.Split(seperator), p => p.Trim());
         }
 

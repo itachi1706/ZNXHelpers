@@ -33,7 +33,8 @@ public class AwsHelperV2Tests
         _mockKmsClient = new Mock<AmazonKeyManagementServiceClient>(RegionEndpoint.APSoutheast1);
         _mockSecretsManagerClient = new Mock<AmazonSecretsManagerClient>(RegionEndpoint.APSoutheast1);
         _mockSsmClient = new Mock<AmazonSimpleSystemsManagementClient>(RegionEndpoint.APSoutheast1);
-        _awsHelperV3 = new AwsHelperV2(_mockS3Client.Object, _mockKmsClient.Object, _mockSecretsManagerClient.Object, _mockSsmClient.Object);
+        _awsHelperV3 = new AwsHelperV2(_mockS3Client.Object, _mockKmsClient.Object, _mockSecretsManagerClient.Object,
+            _mockSsmClient.Object);
     }
 
     [Fact]
@@ -46,7 +47,7 @@ public class AwsHelperV2Tests
         {
             ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test content"))
         };
-        
+
         _mockS3Client.Setup(x => x.GetObjectAsync(It.IsAny<GetObjectRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
 
@@ -55,14 +56,14 @@ public class AwsHelperV2Tests
 
         // Assert
         Assert.Equal(Encoding.UTF8.GetBytes("test content"), result);
-        
+
         var response2 = new GetObjectResponse
         {
             ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test content"))
         };
         _mockS3Client.Setup(x => x.GetObjectAsync(It.IsAny<GetObjectRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response2);
-        
+
         // Act
         var result2 = await _awsHelperV3.GetFileFromS3(key);
 
@@ -79,15 +80,15 @@ public class AwsHelperV2Tests
             SecretString = "{\"name\":\"test\"}",
             ResponseMetadata = new ResponseMetadata()
         };
-        
-        
+
+
         _mockSecretsManagerClient.Setup(x =>
                 x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
-        
+
         // Act
         var result = await _awsHelperV3.GetSecretFromSecretsManager(secretName);
-        
+
         // Assert
         Assert.NotNull(result);
         Assert.Equal("test", result["name"]);
@@ -104,23 +105,23 @@ public class AwsHelperV2Tests
                 Value = "test"
             }
         };
-        
+
         _mockSsmClient.Setup(x =>
                 x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
-        
+
         // Act
         var result = await _awsHelperV3.GetStringFromParameterStore(parameterName);
-        
+
         // Assert
         Assert.Equal("test", result);
-        
+
         result = await _awsHelperV3.GetStringFromParameterStoreSecureString(parameterName, true);
-        
+
         // Assert
         Assert.Equal("test", result);
     }
-    
+
     [Fact]
     public async Task TestGetSecureStringFromParameterStore()
     {
@@ -133,27 +134,27 @@ public class AwsHelperV2Tests
             },
             ResponseMetadata = new ResponseMetadata()
         };
-        
+
         var secureString = new SecureString();
         secureString.AppendChar('t');
         secureString.AppendChar('e');
         secureString.AppendChar('s');
         secureString.AppendChar('t');
-        
+
         _mockSsmClient.Setup(x =>
                 x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
-        
+
         _mockKmsClient.Setup(x =>
                 x.DecryptAsync(It.IsAny<DecryptRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DecryptResponse()
             {
                 Plaintext = new MemoryStream(Encoding.UTF8.GetBytes("test"))
             });
-        
+
         // Act
         var result = await _awsHelperV3.GetSecureStringFromParameterStore(parameterName);
-        
+
         // Assert
         Assert.Equivalent(secureString, result);
     }

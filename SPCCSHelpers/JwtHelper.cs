@@ -7,15 +7,18 @@ namespace SPCCSHelpers
 {
     public class JwtHelper
     {
-        public bool ValidateJwt(string token, TokenValidationParameters tokenValidationParameters, out List<Claim>? claims, out SecurityToken? securityToken)
+        public bool ValidateJwt(string token, TokenValidationParameters tokenValidationParameters,
+            out List<Claim>? claims, out SecurityToken? securityToken)
         {
             try
             {
                 JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-                ClaimsPrincipal claimsPrincipal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+                ClaimsPrincipal claimsPrincipal =
+                    tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
                 claims = new List<Claim>(claimsPrincipal.Claims);
                 return true;
-            } catch
+            }
+            catch
             {
                 claims = null;
                 securityToken = null;
@@ -44,7 +47,8 @@ namespace SPCCSHelpers
             DateTime? expires = null,
             SigningCredentials? signingCredentials = null)
         {
-            JwtSecurityToken jwtSecurityToken = new JwtSecurityToken(issuer, audience, claims, notBefore, expires, signingCredentials);
+            JwtSecurityToken jwtSecurityToken =
+                new JwtSecurityToken(issuer, audience, claims, notBefore, expires, signingCredentials);
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
             string token = handler.WriteToken(jwtSecurityToken);
             return token;

@@ -11,7 +11,7 @@ public class NdiHelperTests
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .CreateLogger();
-        
+
         _ndiHelper = new NdiHelper();
     }
 
@@ -21,7 +21,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://invalid-domain-that-does-not-exist-12345.com";
         var endpointPath = "/test/endpoint";
         var accessToken = "token";
@@ -40,7 +40,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/post";
         var accessToken = "test-token";
@@ -59,7 +59,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/get";
         var accessToken = "test-token";
@@ -78,7 +78,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/post";
         var accessToken = "lambda-auth-token";
@@ -98,7 +98,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/get";
         var accessToken = "bearer-auth-token";
@@ -117,7 +117,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "test-api-key-123");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/get";
         var accessToken = "token";
@@ -137,7 +137,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/get";
         var accessToken = "token";
@@ -156,7 +156,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/post";
         var accessToken = "";
@@ -175,7 +175,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/get";
         var accessToken = "";
@@ -194,7 +194,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/post";
         var accessToken = "token";
@@ -213,7 +213,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/status/404";
         var accessToken = "token";
@@ -231,7 +231,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/status/401";
         var accessToken = "invalid-token";
@@ -249,7 +249,7 @@ public class NdiHelperTests
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
-        
+
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/status/200";
         var accessToken = "token";
@@ -261,4 +261,3 @@ public class NdiHelperTests
         Assert.NotNull(result);
     }
 }
-

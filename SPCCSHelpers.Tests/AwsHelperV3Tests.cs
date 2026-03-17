@@ -42,7 +42,8 @@ public class AwsHelperV3Tests
         _mockSecretsManagerClient = new Mock<AmazonSecretsManagerClient>(RegionEndpoint.APSoutheast1);
         _mockSsmClient = new Mock<AmazonSimpleSystemsManagementClient>(RegionEndpoint.APSoutheast1);
         _mockCwClient = new Mock<AmazonCloudWatchClient>(RegionEndpoint.APSoutheast1);
-        _awsHelperV3 = new AwsHelperV3(_mockS3Client.Object, _mockKmsClient.Object, _mockSecretsManagerClient.Object, _mockSsmClient.Object, _mockCwClient.Object);
+        _awsHelperV3 = new AwsHelperV3(_mockS3Client.Object, _mockKmsClient.Object, _mockSecretsManagerClient.Object,
+            _mockSsmClient.Object, _mockCwClient.Object);
     }
 
     [Fact]
@@ -56,7 +57,7 @@ public class AwsHelperV3Tests
             ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test content")),
             ResponseMetadata = new ResponseMetadata()
         };
-        
+
         _mockS3Client.Setup(x => x.GetObjectAsync(It.IsAny<GetObjectRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
 
@@ -65,7 +66,7 @@ public class AwsHelperV3Tests
 
         // Assert
         Assert.Equal(Encoding.UTF8.GetBytes("test content"), result);
-        
+
         var response2 = new GetObjectResponse
         {
             ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("test content")),
@@ -73,14 +74,14 @@ public class AwsHelperV3Tests
         };
         _mockS3Client.Setup(x => x.GetObjectAsync(It.IsAny<GetObjectRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response2);
-        
+
         // Act
         var result2 = await _awsHelperV3.GetFileFromS3(key);
 
         // Assert
         Assert.Equal(Encoding.UTF8.GetBytes("test content"), result2);
     }
-    
+
     [Fact]
     public async Task TestPutFileToS3()
     {
@@ -94,13 +95,13 @@ public class AwsHelperV3Tests
             HttpStatusCode = HttpStatusCode.OK,
             ResponseMetadata = new ResponseMetadata()
         };
-        
+
         var response2 = new PutObjectResponse()
         {
             HttpStatusCode = HttpStatusCode.NoContent,
             ResponseMetadata = new ResponseMetadata()
         };
-        
+
         _mockS3Client.Setup(x => x.PutObjectAsync(It.IsAny<PutObjectRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
 
@@ -109,20 +110,20 @@ public class AwsHelperV3Tests
 
         // Assert
         Assert.True(result);
-        
+
         result = await _awsHelperV3.PutFileToS3(fileContent, key, "text/plain");
 
         // Assert
         Assert.True(result);
-        
+
         result = await _awsHelperV3.PutFileToS3(fileContent, key);
 
         // Assert
         Assert.True(result);
-        
+
         _mockS3Client.Setup(x => x.PutObjectAsync(It.IsAny<PutObjectRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response2);
-        
+
         // Act
         var result2 = await _awsHelperV3.PutFileToS3(fileContent, key, "text/plain", bucketName);
 
@@ -139,15 +140,15 @@ public class AwsHelperV3Tests
         var bucketName = "testBucket";
 
         var response = "https://s3.ap-southeast-1.amazonaws.com/testBucket/testKey";
-        
+
         // Act
         var result = _awsHelperV3.GeneratePreSignedS3UrlDownload(key, expiry, bucketName);
-        
+
         // Assert
         Assert.Contains(response, result);
-        
+
         result = _awsHelperV3.GeneratePreSignedS3UrlDownload(key, expiry);
-        
+
         // Assert
         Assert.Contains(response, result);
     }
@@ -161,21 +162,21 @@ public class AwsHelperV3Tests
             SecretString = "{\"name\":\"test\"}",
             ResponseMetadata = new ResponseMetadata()
         };
-        
-        
+
+
         _mockSecretsManagerClient.Setup(x =>
                 x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
-        
+
         // Act
         var result = await _awsHelperV3.GetSecretFromSecretsManager(secretName);
-        
+
         // Assert
         Assert.NotNull(result);
         Assert.Equal("test", result["name"]);
-        
+
         result = await _awsHelperV3.GetSecretFromSecretsManager();
-        
+
         // Assert
         Assert.NotNull(result);
         Assert.Equal("test", result["name"]);
@@ -193,23 +194,23 @@ public class AwsHelperV3Tests
             },
             ResponseMetadata = new ResponseMetadata()
         };
-        
+
         _mockSsmClient.Setup(x =>
                 x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
-        
+
         // Act
         var result = await _awsHelperV3.GetStringFromParameterStore(parameterName);
-        
+
         // Assert
         Assert.Equal("test", result);
-        
+
         result = await _awsHelperV3.GetStringFromParameterStoreSecureString(parameterName, true);
-        
+
         // Assert
         Assert.Equal("test", result);
     }
-    
+
     [Fact]
     public async Task TestGetSecureStringFromParameterStore()
     {
@@ -222,17 +223,17 @@ public class AwsHelperV3Tests
             },
             ResponseMetadata = new ResponseMetadata()
         };
-        
+
         var secureString = new SecureString();
         secureString.AppendChar('t');
         secureString.AppendChar('e');
         secureString.AppendChar('s');
         secureString.AppendChar('t');
-        
+
         _mockSsmClient.Setup(x =>
                 x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
-        
+
         _mockKmsClient.Setup(x =>
                 x.DecryptAsync(It.IsAny<DecryptRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DecryptResponse()
@@ -240,10 +241,10 @@ public class AwsHelperV3Tests
                 Plaintext = new MemoryStream(Encoding.UTF8.GetBytes("test")),
                 ResponseMetadata = new ResponseMetadata()
             });
-        
+
         // Act
         var result = await _awsHelperV3.GetSecureStringFromParameterStore(parameterName);
-        
+
         // Assert
         Assert.Equivalent(secureString, result);
     }

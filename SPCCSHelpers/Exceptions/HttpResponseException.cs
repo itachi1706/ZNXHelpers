@@ -1,4 +1,5 @@
 ﻿using System.Runtime.Serialization;
+
 namespace SPCCSHelpers.Exceptions
 {
     [Serializable]
@@ -22,6 +23,8 @@ namespace SPCCSHelpers.Exceptions
         {
         }
 
-        public override string Message => string.IsNullOrWhiteSpace(CustomMessage) ? $"HTTP Response Status Code {StatusCode}." : $"{CustomMessage} : HTTP Response Status Code {StatusCode}.";
+        public override string Message => string.IsNullOrWhiteSpace(CustomMessage)
+            ? $"HTTP Response Status Code {StatusCode}."
+            : $"{CustomMessage} : HTTP Response Status Code {StatusCode}.";
     }
 }

@@ -2,6 +2,7 @@ using Serilog;
 
 namespace SPCCSHelpers.Tests;
 
+[Collection("EnvironmentVariableDependent")]
 public class NdiHelperTests
 {
     private readonly NdiHelper _ndiHelper;

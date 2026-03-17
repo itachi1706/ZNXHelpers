@@ -1,4 +1,5 @@
 using System.Net;
+using System.Reflection;
 using System.Security;
 using System.Text;
 using Amazon;
@@ -17,6 +18,7 @@ using Moq;
 
 namespace SPCCSHelpers.Tests;
 
+[Collection("EnvironmentVariableDependent")]
 public class AwsHelperV3Tests
 {
     private readonly AwsHelperV3 _awsHelperV3;
@@ -366,5 +368,203 @@ public class AwsHelperV3Tests
         Assert.Single(capturedRequest.MetricData[0].Dimensions);
         Assert.Equal("UniqueIdentifier", capturedRequest.MetricData[0].Dimensions[0].Name);
         Assert.Equal("instance-123", capturedRequest.MetricData[0].Dimensions[0].Value);
+    }
+
+    [Fact]
+    public async Task PushMetric_byName_usesProvidedUniqueIdentifierAndUnit()
+    {
+        Environment.SetEnvironmentVariable("AWS_CUSTOM_METRICS", "true");
+
+        var helper = new AwsHelperV3(
+            _mockS3Client.Object,
+            _mockKmsClient.Object,
+            _mockSecretsManagerClient.Object,
+            _mockSsmClient.Object,
+            _mockCwClient.Object);
+
+        PutMetricDataRequest? capturedRequest = null;
+        _mockCwClient
+            .Setup(x => x.PutMetricDataAsync(It.IsAny<PutMetricDataRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<PutMetricDataRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(new PutMetricDataResponse { ResponseMetadata = new ResponseMetadata() });
+
+        await helper.PushMetric("ProcessingTime", 44, "App/Processing", "worker-42", StandardUnit.Milliseconds);
+
+        Assert.NotNull(capturedRequest);
+        Assert.Equal("App/Processing", capturedRequest!.Namespace);
+        Assert.Single(capturedRequest.MetricData);
+        Assert.Equal(StandardUnit.Milliseconds, capturedRequest.MetricData[0].Unit);
+        Assert.Equal("worker-42", capturedRequest.MetricData[0].Dimensions[0].Value);
+    }
+
+    [Fact]
+    public void GeneratePreSignedS3UrlDownload_throwsWhenExpiryGreaterThanSevenDays()
+    {
+        Assert.Throws<AmazonS3Exception>(() => _awsHelperV3.GeneratePreSignedS3UrlDownload("test.txt", 10081));
+    }
+
+    [Fact]
+    public async Task PutFileToS3_returnsFalseWhenS3ThrowsException()
+    {
+        _mockS3Client
+            .Setup(x => x.PutObjectAsync(It.IsAny<PutObjectRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new AmazonS3Exception("upload failed"));
+
+        var result = await _awsHelperV3.PutFileToS3(Encoding.UTF8.GetBytes("content"), "test.txt");
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task GetStringFromParameterStore_returnsNullWhenParameterMissing()
+    {
+        _mockSsmClient
+            .Setup(x => x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetParameterResponse { Parameter = null, ResponseMetadata = new ResponseMetadata() });
+
+        var result = await _awsHelperV3.GetStringFromParameterStore("missing");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetStringFromParameterStoreSecureString_withDecryptionFalse_decryptsWithKms()
+    {
+        _mockSsmClient
+            .Setup(x => x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetParameterResponse
+            {
+                Parameter = new Parameter
+                {
+                    Value = Convert.ToBase64String(Encoding.UTF8.GetBytes("encrypted")),
+                    ARN = "arn:aws:ssm:ap-southeast-1:123456789012:parameter/test"
+                },
+                ResponseMetadata = new ResponseMetadata()
+            });
+
+        _mockKmsClient
+            .Setup(x => x.DecryptAsync(It.IsAny<DecryptRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DecryptResponse
+            {
+                Plaintext = new MemoryStream(Encoding.UTF8.GetBytes("decrypted-value")),
+                ResponseMetadata = new ResponseMetadata()
+            });
+
+        var result = await _awsHelperV3.GetStringFromParameterStoreSecureString("param", false);
+
+        Assert.Equal("decrypted-value", result);
+    }
+
+    [Fact]
+    public async Task GetStringFromParameterStoreSecureString_returnsNullWhenParameterMissing()
+    {
+        _mockSsmClient
+            .Setup(x => x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetParameterResponse { Parameter = null, ResponseMetadata = new ResponseMetadata() });
+
+        var result = await _awsHelperV3.GetStringFromParameterStoreSecureString("missing", false);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetSecretFromSecretsManager_throwsWhenSecretsManagerResourceNotFoundOccurs()
+    {
+        _mockSecretsManagerClient
+            .Setup(x => x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Amazon.SecretsManager.Model.ResourceNotFoundException("not found"));
+
+        await Assert.ThrowsAsync<Amazon.SecretsManager.Model.ResourceNotFoundException>(() =>
+            _awsHelperV3.GetSecretFromSecretsManager("missing-secret"));
+    }
+
+    [Fact]
+    public async Task GetSecretFromSecretsManager_returnsNullWhenIoExceptionOccurs()
+    {
+        _mockSecretsManagerClient
+            .Setup(x => x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new IOException("io issue"));
+
+        var result = await _awsHelperV3.GetSecretFromSecretsManager("any-secret");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetCloudWatchClient_returnsInjectedClientInTestMode()
+    {
+        var result = _awsHelperV3.GetCloudWatchClient();
+
+        Assert.Same(_mockCwClient.Object, result);
+    }
+
+    [Fact]
+    public async Task GetAwsCredentialsSts_throwsWhenWebIdentityTokenFileIsInvalid()
+    {
+        Environment.SetEnvironmentVariable("AWS_WEB_IDENTITY_TOKEN_FILE", "/tmp/does-not-exist-token-file");
+        Environment.SetEnvironmentVariable("AWS_ROLE_ARN", "arn:aws:iam::123456789012:role/unit-test-role");
+        Environment.SetEnvironmentVariable("AWS_ROLE_SESSION_NAME", "unit-test-session");
+
+        var helper = new AwsHelperV3();
+        var method =
+            typeof(AwsHelperV3).GetMethod("GetAwsCredentialsSts", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(method);
+
+        var invokeResult = method!.Invoke(helper, null);
+        Assert.NotNull(invokeResult);
+
+        var credentialsTask = Assert.IsAssignableFrom<Task<AWSCredentials?>>(invokeResult);
+
+        await Assert.ThrowsAnyAsync<Exception>(async () => await credentialsTask);
+    }
+
+    [Fact]
+    public async Task PushMetric_withMetricList_usesProvidedNamespaceWhenSpecified()
+    {
+        Environment.SetEnvironmentVariable("AWS_CUSTOM_METRICS", "true");
+        Environment.SetEnvironmentVariable("METRICS_NAMESPACE", "App/Default");
+
+        var helper = new AwsHelperV3(
+            _mockS3Client.Object,
+            _mockKmsClient.Object,
+            _mockSecretsManagerClient.Object,
+            _mockSsmClient.Object,
+            _mockCwClient.Object);
+
+        PutMetricDataRequest? capturedRequest = null;
+        _mockCwClient
+            .Setup(x => x.PutMetricDataAsync(It.IsAny<PutMetricDataRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<PutMetricDataRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(new PutMetricDataResponse { ResponseMetadata = new ResponseMetadata() });
+
+        await helper.PushMetric(new List<MetricDatum>
+        {
+            new() { MetricName = "RequestCount", Unit = StandardUnit.Count, Value = 9 }
+        }, "App/Override");
+
+        Assert.NotNull(capturedRequest);
+        Assert.Equal("App/Override", capturedRequest!.Namespace);
+    }
+
+    [Fact]
+    public void GetUniqueInstanceName_returnsHostnameWhenAppIdMissing()
+    {
+        Environment.SetEnvironmentVariable("APP_ID", null);
+        Environment.SetEnvironmentVariable("HOSTNAME", "host-fallback");
+
+        var result = AwsHelperV3.GetUniqueInstanceName();
+
+        Assert.Equal("host-fallback", result);
+    }
+
+    [Fact]
+    public void GetUniqueInstanceName_returnsMachineNameWhenAppIdAndHostnameMissing()
+    {
+        Environment.SetEnvironmentVariable("APP_ID", null);
+        Environment.SetEnvironmentVariable("HOSTNAME", null);
+
+        var result = AwsHelperV3.GetUniqueInstanceName();
+
+        Assert.Equal(Environment.MachineName, result);
     }
 }

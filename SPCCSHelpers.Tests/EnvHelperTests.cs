@@ -1,5 +1,6 @@
 namespace SPCCSHelpers.Tests;
 
+[Collection("EnvironmentVariableDependent")]
 public class EnvHelperTests
 {
     [Fact]

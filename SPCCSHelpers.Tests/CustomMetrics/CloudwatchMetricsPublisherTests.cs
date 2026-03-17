@@ -10,6 +10,7 @@ using SPCCSHelpers.CustomMetrics;
 
 namespace SPCCSHelpers.Tests;
 
+[Collection("EnvironmentVariableDependent")]
 public class CloudwatchMetricsPublisherTests
 {
     [Fact]

@@ -1,5 +1,6 @@
 using System.Security;
 using System.Text;
+using System.Reflection;
 using Amazon;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
@@ -14,6 +15,7 @@ using Moq;
 
 namespace SPCCSHelpers.Tests;
 
+[Collection("EnvironmentVariableDependent")]
 public class AwsHelperV2Tests
 {
     private readonly AwsHelperV2 _awsHelperV3;
@@ -159,5 +161,125 @@ public class AwsHelperV2Tests
         Assert.Equivalent(secureString, result);
     }
 
-    // Add more tests for other methods in the AwsHelperV3 class
+    [Fact]
+    public async Task GetStringFromParameterStore_returnsNullWhenParameterIsMissing()
+    {
+        _mockSsmClient
+            .Setup(x => x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetParameterResponse { Parameter = null });
+
+        var result = await _awsHelperV3.GetStringFromParameterStore("missingParam");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetStringFromParameterStoreSecureString_withDecryptionFalse_returnsKmsDecryptedValue()
+    {
+        _mockSsmClient
+            .Setup(x => x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetParameterResponse
+            {
+                Parameter = new Parameter
+                {
+                    Value = Convert.ToBase64String(Encoding.UTF8.GetBytes("encrypted")),
+                    ARN = "arn:aws:ssm:ap-southeast-1:123456789012:parameter/test"
+                }
+            });
+
+        _mockKmsClient
+            .Setup(x => x.DecryptAsync(It.IsAny<DecryptRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DecryptResponse
+            {
+                Plaintext = new MemoryStream(Encoding.UTF8.GetBytes("decrypted-value"))
+            });
+
+        var result = await _awsHelperV3.GetStringFromParameterStoreSecureString("param", false);
+
+        Assert.Equal("decrypted-value", result);
+    }
+
+    [Fact]
+    public async Task GetStringFromParameterStoreSecureString_throwsWhenCiphertextIsNotBase64()
+    {
+        _mockSsmClient
+            .Setup(x => x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetParameterResponse
+            {
+                Parameter = new Parameter
+                {
+                    Value = "not-base64",
+                    ARN = "arn:aws:ssm:ap-southeast-1:123456789012:parameter/test"
+                }
+            });
+
+        await Assert.ThrowsAsync<FormatException>(() =>
+            _awsHelperV3.GetStringFromParameterStoreSecureString("param", false));
+    }
+
+    [Fact]
+    public async Task GetSecureStringFromParameterStore_returnsNullWhenParameterIsMissing()
+    {
+        _mockSsmClient
+            .Setup(x => x.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GetParameterResponse { Parameter = null });
+
+        var result = await _awsHelperV3.GetSecureStringFromParameterStore("missingParam");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetSecretFromSecretsManager_returnsNullWhenResponseIsNull()
+    {
+        _mockSecretsManagerClient
+            .Setup(x => x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GetSecretValueResponse)null!);
+
+        var result = await _awsHelperV3.GetSecretFromSecretsManager("missingSecret");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetSecretFromSecretsManager_returnsNullWhenIOExceptionOccurs()
+    {
+        _mockSecretsManagerClient
+            .Setup(x => x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new IOException("I/O error"));
+
+        var result = await _awsHelperV3.GetSecretFromSecretsManager("secret");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetFileFromS3_withoutBucketParameter_usesConfiguredDefaultBucket()
+    {
+        GetObjectRequest? capturedRequest = null;
+        _mockS3Client
+            .Setup(x => x.GetObjectAsync(It.IsAny<GetObjectRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<GetObjectRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(new GetObjectResponse
+            {
+                ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes("ok"))
+            });
+
+        await _awsHelperV3.GetFileFromS3("file.txt");
+
+        Assert.NotNull(capturedRequest);
+        Assert.Equal("testBucket", capturedRequest!.BucketName);
+    }
+
+    [Fact]
+    public void GetAwsCredentials_throwsWhenProfileIsNotFound()
+    {
+        var method = typeof(AwsHelperV2).GetMethod("GetAwsCredentials", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var ex = Assert.Throws<TargetInvocationException>(() => method!.Invoke(null, ["profile-does-not-exist"]));
+
+        Assert.IsType<AmazonServiceException>(ex.InnerException);
+        Assert.Equal("Failed to get AWS credentials", ex.InnerException!.Message);
+    }
 }

@@ -1,3 +1,4 @@
+using Amazon.CloudWatch;
 using Amazon.CloudWatch.Model;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -32,7 +33,6 @@ public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper
         }
     }
 
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (!_awsCustomMetrics)
@@ -41,6 +41,7 @@ public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper
             return;
         }
 
+        using var cloudWatchClient = awsHelper.GetCloudWatchClient();
         _logger.Information("Cloudwatch Metrics Publisher started");
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
         var batch = new List<MetricDatum>();
@@ -81,26 +82,26 @@ public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper
 
                 if (batch.Count < MaxBatchSize) continue;
                 VerboseLog($"Batch size limit reached. Flushing batch of {batch.Count} metrics...");
-                await FlushBatchAsync(batch);
+                await FlushBatchAsync(cloudWatchClient, batch);
             }
 
             VerboseLog($"Batch size: {batch.Count}");
             if (batch.Count > 0)
             {
                 VerboseLog("Flushing batch...");
-                await FlushBatchAsync(batch);
+                await FlushBatchAsync(cloudWatchClient, batch);
             }
 
             VerboseLog("Batch flushed. Waiting for next tick...");
         }
     }
 
-    private async Task FlushBatchAsync(List<MetricDatum> batch)
+    private async Task FlushBatchAsync(AmazonCloudWatchClient client, List<MetricDatum> batch)
     {
         VerboseLog($"Flushing {batch.Count} metrics to CloudWatch...");
         try
         {
-            await awsHelper.PushMetric(batch.ToList());
+            await awsHelper.PushMetric(client, batch.ToList());
             batch.Clear();
         }
         catch (Exception e)

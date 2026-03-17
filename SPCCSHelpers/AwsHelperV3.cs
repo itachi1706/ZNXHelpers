@@ -269,7 +269,7 @@ namespace SPCCSHelpers
             return new AmazonSimpleSystemsManagementClient(Amazon.RegionEndpoint.APSoutheast1);
         }
 
-        private AmazonCloudWatchClient GetCloudWatchClient()
+        public AmazonCloudWatchClient GetCloudWatchClient()
         {
             if (_testMode) return _testCloudWatchClient!;
             return _profileName == null
@@ -668,9 +668,11 @@ namespace SPCCSHelpers
         /// the method will log a message and skip pushing to CloudWatch.
         /// The method uses the AWS SDK to send the metric data and logs the number of metrics pushed along with the namespace used.
         /// </summary>
+        /// <param name="cwClient">Amazon Cloudwatch Client (for reuse)</param>
         /// <param name="metricList">List of metrics to push</param>
         /// <param name="metricNamespace">Optional. The namespace for the metric. If not provided, it defaults to a predefined namespace from environment variables or "App/SPCCSGateway".</param>
-        public async Task PushMetric(List<MetricDatum> metricList, string? metricNamespace = null)
+        public async Task PushMetric(AmazonCloudWatchClient cwClient, List<MetricDatum> metricList,
+            string? metricNamespace = null)
         {
             if (!_awsCustomMetrics)
             {
@@ -681,13 +683,32 @@ namespace SPCCSHelpers
             // Handle defaults
             metricNamespace ??= _defaultMetricsNamespace;
 
-            using var cwClient = GetCloudWatchClient();
             await cwClient.PutMetricDataAsync(new PutMetricDataRequest
             {
                 Namespace = metricNamespace,
                 MetricData = metricList
             });
             VerboseLog($"[PushMetric] Pushed {metricList.Count} metrics to CloudWatch in namespace {metricNamespace}");
+        }
+
+        /// <summary>
+        /// Pushes a list of metrics to AWS CloudWatch under the specified namespace.
+        /// If custom metrics are disabled via configuration,
+        /// the method will log a message and skip pushing to CloudWatch.
+        /// The method uses the AWS SDK to send the metric data and logs the number of metrics pushed along with the namespace used.
+        /// </summary>
+        /// <param name="metricList">List of metrics to push</param>
+        /// <param name="metricNamespace">Optional. The namespace for the metric. If not provided, it defaults to a predefined namespace from environment variables or "App/SPCCSGateway".</param>
+        public async Task PushMetric(List<MetricDatum> metricList, string? metricNamespace = null)
+        {
+            if (!_awsCustomMetrics)
+            {
+                VerboseLog("[PushMetric] Custom metrics disabled, skipping push to CloudWatch");
+                return;
+            }
+
+            using var cwClient = GetCloudWatchClient();
+            await PushMetric(cwClient, metricList, metricNamespace);
         }
 
         /// <summary>

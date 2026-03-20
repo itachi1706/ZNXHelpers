@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.2.0] - 2026-03-17
+### :boom: BREAKING CHANGES
+- due to [`60bca70`](https://github.com/itachi1706/SPCCSHelpers/commit/60bca70410fb61aca60c54f36886a3b1ea2b519a) - Retired support for .NET 6 *(commit by [@itachi1706](https://github.com/itachi1706))*:
+
+  Retired support for .NET 6
+
+
+### :sparkles: New Features
+- [`0ef8979`](https://github.com/itachi1706/SPCCSHelpers/commit/0ef89798bb9d75ae87686c74e9f392aa147642c8) - Implemented helper functions for calling Cloudwatch Metrics if enabled *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`6341b0d`](https://github.com/itachi1706/SPCCSHelpers/commit/6341b0dc8217c3a1d47a02b458a7ff36582e3036) - Added services to handle metrics *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`60bca70`](https://github.com/itachi1706/SPCCSHelpers/commit/60bca70410fb61aca60c54f36886a3b1ea2b519a) - Retired support for .NET 6 *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`c5e02bc`](https://github.com/itachi1706/SPCCSHelpers/commit/c5e02bcbc52f13977704bfa505f9db5a35cd196a) - Added option to always add instance id to dimensions *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :recycle: Refactors
+- [`aede24a`](https://github.com/itachi1706/SPCCSHelpers/commit/aede24af463308027092c949122962f6d0ef8009) - Rename package *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`a0f025d`](https://github.com/itachi1706/SPCCSHelpers/commit/a0f025dc89e867ebfb06f2d1dad50a1abd9e217a) - Rename references *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`d8f6dc0`](https://github.com/itachi1706/SPCCSHelpers/commit/d8f6dc0bc3d1be912e378621ba2ee5bbb5422093) - Formatting *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`6d0057a`](https://github.com/itachi1706/SPCCSHelpers/commit/6d0057a1725384f52ded14334652b1cf7b416b2b) - Formatting *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`a2c4a87`](https://github.com/itachi1706/SPCCSHelpers/commit/a2c4a87a772cddd552716a21ada7931584a66ff6) - Formatting *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`cdb17dc`](https://github.com/itachi1706/SPCCSHelpers/commit/cdb17dce01fed89ec87dff09e82c2776232c302d) - Move to file scoped namespace *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :white_check_mark: Tests
+- [`c3a453d`](https://github.com/itachi1706/SPCCSHelpers/commit/c3a453d79fd9873d6510ad1faffb145c649c2916) - Bump tests to .NET 10 *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`a9d31ac`](https://github.com/itachi1706/SPCCSHelpers/commit/a9d31acfee9cf35b64115f9e283a0452d5a11545) - Add back test cert *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`b7f6e9b`](https://github.com/itachi1706/SPCCSHelpers/commit/b7f6e9b09b871e6a8188deedf17ab1835f0d0e4c) - Added test cases for new metrics handling *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`3ea0d2b`](https://github.com/itachi1706/SPCCSHelpers/commit/3ea0d2be14bcfe78b0ea004d004ce3cc39ba9119) - Added AWSHelper test cases and reduce flake *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`fbb15e0`](https://github.com/itachi1706/SPCCSHelpers/commit/fbb15e06e3994bdad1fd5430128f89a2072cb71f) - Add more test cases *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :wrench: Chores
+- [`19b589f`](https://github.com/itachi1706/SPCCSHelpers/commit/19b589fcb22f55b87618c305d4417d4751fd42d7) - **deps**: Bump NuGet/setup-nuget from 2.0.1 to 2.0.2 *(commit by [@dependabot[bot]](https://github.com/apps/dependabot))*
+- [`38f6cb0`](https://github.com/itachi1706/SPCCSHelpers/commit/38f6cb02180d4168fc73db93dccc40b5339722d3) - Use DI injected AWSHelperV3 *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`5b7ea42`](https://github.com/itachi1706/SPCCSHelpers/commit/5b7ea42c1e51d54f51faa8f9df96d071ef57a4ad) - Spelling *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`5ed0e4d`](https://github.com/itachi1706/SPCCSHelpers/commit/5ed0e4da7886101e8de6c06a2e83a96aac0f5de4) - Allow client reuse for cloudwatch client *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+
 ## [v3.1.1] - 2026-03-12
 ### :sparkles: New Features
 - [`cc62577`](https://github.com/itachi1706/SPCCSHelpers/commit/cc625771c686a6449814d206123b642f91932438) - Added status code logging and bump version *(commit by [@itachi1706](https://github.com/itachi1706))*
@@ -105,3 +140,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v3.0.2]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.0.1...v3.0.2
 [v3.1.0]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.0.2...v3.1.0
 [v3.1.1]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.1.0...v3.1.1
+[v3.2.0]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.1.1...v3.2.0

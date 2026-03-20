@@ -263,7 +263,7 @@ public class NdiHelperTests
     }
 
     [Fact]
-    public async Task CallNdiEndpoint_DPoPModeTrue_IncludesDPoPAuthorizationHeader()
+    public async Task CallNdiEndpoint_DPoPStringProvided_IncludesDPoPAuthorizationHeader()
     {
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
@@ -272,17 +272,19 @@ public class NdiHelperTests
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/get";
         var accessToken = "dpop-auth-token";
+        var dPoPString = "dpop-proof-token";
 
         // Act
-        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, false, true);
+        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, false, dPoPString);
 
         // Assert
         Assert.NotNull(result);
         Assert.Contains("DPoP dpop-auth-token", result);
+        Assert.Contains("dpop-proof-token", result);
     }
 
     [Fact]
-    public async Task CallNdiEndpoint_DPoPModeTrue_DoesNotUseBearerHeader()
+    public async Task CallNdiEndpoint_DPoPStringProvided_DoesNotUseBearerHeader()
     {
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
@@ -291,18 +293,20 @@ public class NdiHelperTests
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/get";
         var accessToken = "dpop-token-123";
+        var dPoPString = "dpop-proof-123";
 
         // Act
-        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, false, true);
+        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, false, dPoPString);
 
         // Assert
         Assert.NotNull(result);
         Assert.DoesNotContain("Bearer", result);
         Assert.Contains("DPoP", result);
+        Assert.Contains("dpop-proof-123", result);
     }
 
     [Fact]
-    public async Task CallNdiEndpoint_DPoPModeWithPost_IncludesDPoPHeader()
+    public async Task CallNdiEndpoint_DPoPStringProvidedWithPost_IncludesDPoPHeader()
     {
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
@@ -311,17 +315,19 @@ public class NdiHelperTests
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/post";
         var accessToken = "dpop-post-token";
+        var dPoPString = "dpop-proof-post";
 
         // Act
-        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, true, true);
+        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, true, dPoPString);
 
         // Assert
         Assert.NotNull(result);
         Assert.Contains("DPoP", result);
+        Assert.Contains("dpop-proof-post", result);
     }
 
     [Fact]
-    public async Task CallNdiEndpoint_DPoPModeWithApiKey_IncludesBothDPoPAndApiKey()
+    public async Task CallNdiEndpoint_DPoPStringProvidedWithApiKey_IncludesBothDPoPAndApiKey()
     {
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
@@ -330,39 +336,43 @@ public class NdiHelperTests
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/get";
         var accessToken = "dpop-with-api-key-token";
+        var dPoPString = "dpop-proof-with-api-key";
 
         // Act
-        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, false, true);
+        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, false, dPoPString);
 
         // Assert
         Assert.NotNull(result);
         Assert.Contains("DPoP", result);
+        Assert.Contains("dpop-proof-with-api-key", result);
         Assert.Contains("X-Api-Key", result);
         Assert.Contains("dpop-test-api-key", result);
     }
 
     [Fact]
-    public async Task CallNdiEndpoint_LambdaModeAndDPoPMode_LambdaMode_IsPreferred()
+    public async Task CallNdiEndpoint_LambdaModeAndDPoPStringProvided_IncludesAuthAndDPoPFormFields()
     {
-        // Arrange - When both lambdaHeaderMode and usesDPoP are true, lambda mode takes precedence
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("API_GATEWAY_KEY", "");
 
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/post";
         var accessToken = "lambda-preferred-token";
+        var dPoPString = "lambda-dpop-proof";
 
         // Act
-        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, true, true, true);
+        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, true, true, dPoPString);
 
         // Assert
         Assert.NotNull(result);
         Assert.Contains("auth", result);
         Assert.Contains("lambda-preferred-token", result);
+        Assert.Contains("auth-use-dpop", result);
+        Assert.Contains("lambda-dpop-proof", result);
     }
 
     [Fact]
-    public async Task CallNdiEndpoint_DPoPMode_WithEmptyAccessToken_SendsEmptyDPoP()
+    public async Task CallNdiEndpoint_DPoPStringProvided_WithEmptyAccessToken_SendsEmptyDPoPAuthHeader()
     {
         // Arrange
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
@@ -371,13 +381,15 @@ public class NdiHelperTests
         var baseUrl = "https://httpbin.org";
         var endpointPath = "/get";
         var accessToken = "";
+        var dPoPString = "dpop-proof-empty-token";
 
         // Act
-        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, false, true);
+        var result = await _ndiHelper.CallNdiEndpoint(baseUrl, endpointPath, accessToken, false, false, dPoPString);
 
         // Assert
         Assert.NotNull(result);
         Assert.Contains("DPoP", result);
+        Assert.Contains("dpop-proof-empty-token", result);
     }
 
     [Fact]

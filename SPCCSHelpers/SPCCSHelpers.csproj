@@ -3,11 +3,11 @@
   <PropertyGroup>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>3.2.1</PackageVersion>
+    <PackageVersion>3.2.2</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>EMQ2</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>Add DPoP support</PackageReleaseNotes>
+    <PackageReleaseNotes>Better DPoP support</PackageReleaseNotes>
     <Summary>Helper Class for SPC Common Services</Summary>
     <Title>SPCCS Helpers</Title>
     <Description>Common Helper class for various common functions</Description>

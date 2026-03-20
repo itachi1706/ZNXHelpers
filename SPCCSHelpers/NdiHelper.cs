@@ -7,7 +7,7 @@ public class NdiHelper
     private readonly ILogger _logger = Log.ForContext<NdiHelper>();
 
     public async Task<string?> CallNdiEndpoint(string baseUrl, string endpointPath, string accessToken,
-        bool lambdaHeaderMode, bool isPostMethod = true)
+        bool lambdaHeaderMode, bool isPostMethod = true, bool usesDPoP = false)
     {
         var apiKey = EnvHelper.GetString("API_GATEWAY_KEY", "");
         var isDev = EnvHelper.GetString("ASPNETCORE_ENVIRONMENT", "Development") == "Development";
@@ -42,12 +42,18 @@ public class NdiHelper
         {
             _logger.Debug("Set via Auth Post Data");
             dict.Add("auth", accessToken);
+            dict.Add("auth-use-dpop", usesDPoP.ToString().ToLower());
         }
-        else
+        else if (!usesDPoP)
         {
             _logger.Debug("Set under Authorization Header");
             client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        }
+        else
+        {
+            _logger.Debug("Set under Authorization Header as DPoP");
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("DPoP", accessToken);
         }
 
         var data = new FormUrlEncodedContent(dict);

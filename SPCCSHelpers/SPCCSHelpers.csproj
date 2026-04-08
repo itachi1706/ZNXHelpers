@@ -3,7 +3,7 @@
   <PropertyGroup>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>3.2.3</PackageVersion>
+    <PackageVersion>3.2.4</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>EMQ2</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
@@ -42,7 +42,7 @@
     <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.7.3" />
     <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.4.9" />
     <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.9.3" />
-    <PackageReference Include="AWSSDK.Core" Version="4.0.3.21" />
+    <PackageReference Include="AWSSDK.Core" Version="4.0.3.19" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.12" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.5" />
     <PackageReference Include="Serilog" Version="4.3.1" />

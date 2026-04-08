@@ -5,7 +5,7 @@ namespace SPCCSHelpers.Tests.CustomMetrics;
 [Collection("EnvironmentVariableDependent")]
 public class MetricQueueTests
 {
-    private static IDisposable SetAwsCustomMetrics(string value)
+    private static EnvironmentVariableScope SetAwsCustomMetrics(string value)
     {
         return new EnvironmentVariableScope("AWS_CUSTOM_METRICS", value);
     }

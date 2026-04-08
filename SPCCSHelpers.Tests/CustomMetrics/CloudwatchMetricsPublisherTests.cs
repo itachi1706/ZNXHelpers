@@ -8,13 +8,13 @@ using Amazon.SimpleSystemsManagement;
 using Moq;
 using SPCCSHelpers.CustomMetrics;
 
-namespace SPCCSHelpers.Tests;
+namespace SPCCSHelpers.Tests.CustomMetrics;
 
 [Collection("EnvironmentVariableDependent")]
 public class CloudwatchMetricsPublisherTests
 {
     [Fact]
-    public async Task StartAsync_withCustomMetricsDisabled_doesNotPublishAndLeavesQueueUntouched()
+    public async Task StartAsync_withCustomMetricsDisabled_doesNotPublishAndClearsQueue()
     {
         Environment.SetEnvironmentVariable("AWS_CUSTOM_METRICS", "false");
         Environment.SetEnvironmentVariable("METRICS_ALWAYS_INSTANCE_ID", "true");
@@ -41,8 +41,8 @@ public class CloudwatchMetricsPublisherTests
             Times.Never);
 
         var hasQueuedMetric = queue.Reader.TryRead(out var queuedMetric);
-        Assert.True(hasQueuedMetric);
-        Assert.NotNull(queuedMetric);
+        Assert.False(hasQueuedMetric);
+        Assert.Null(queuedMetric);
     }
 
     [Fact]

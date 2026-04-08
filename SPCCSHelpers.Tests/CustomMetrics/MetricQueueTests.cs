@@ -1,6 +1,6 @@
 using SPCCSHelpers.CustomMetrics;
 
-namespace SPCCSHelpers.Tests;
+namespace SPCCSHelpers.Tests.CustomMetrics;
 
 public class MetricQueueTests
 {

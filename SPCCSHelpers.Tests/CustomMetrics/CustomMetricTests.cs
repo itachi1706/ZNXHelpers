@@ -2,7 +2,7 @@ using Amazon.CloudWatch;
 using Amazon.CloudWatch.Model;
 using SPCCSHelpers.CustomMetrics;
 
-namespace SPCCSHelpers.Tests;
+namespace SPCCSHelpers.Tests.CustomMetrics;
 
 public class CustomMetricTests
 {

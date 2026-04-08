@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.2.2] - 2026-03-20
+### :bug: Bug Fixes
+- [`acbf031`](https://github.com/itachi1706/SPCCSHelpers/commit/acbf031f2792741c863999c47182c7b4357e4f54) - Update DPoP implementation to pass the string value instead *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+
 ## [v3.2.1] - 2026-03-20
 ### :sparkles: New Features
 - [`162ffb0`](https://github.com/itachi1706/SPCCSHelpers/commit/162ffb0a3d406c75d6856d818de312ec40057972) - Add support for DPoP *(commit by [@itachi1706](https://github.com/itachi1706))*
@@ -147,3 +152,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v3.1.1]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.1.0...v3.1.1
 [v3.2.0]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.1.1...v3.2.0
 [v3.2.1]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.2.0...v3.2.1
+[v3.2.2]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.2.1...v3.2.2

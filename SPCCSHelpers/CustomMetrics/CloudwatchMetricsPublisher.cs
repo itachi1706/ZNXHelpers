@@ -32,11 +32,23 @@ public class CloudwatchMetricsPublisher(MetricQueue queue, AwsHelperV3 awsHelper
         }
     }
 
+    private void ClearQueue()
+    {
+        var count = 0;
+        while (queue.Reader.TryRead(out _))
+        {
+            count++;
+        }
+        _logger.Debug("Cleared {Count} metrics from queue", count);
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (!_awsCustomMetrics)
         {
-            _logger.Warning("AWS_CUSTOM_METRICS is disabled. Cloudwatch Metrics Publisher will not start");
+            _logger.Warning("AWS_CUSTOM_METRICS is disabled. Cloudwatch Metrics Publisher will not start. Clearing queue");
+            // Clear queue reader
+            ClearQueue();
             return;
         }
 

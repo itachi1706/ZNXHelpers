@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.2.4] - 2026-04-08
+### :bug: Bug Fixes
+- [`b165e64`](https://github.com/itachi1706/SPCCSHelpers/commit/b165e64b0e67ed36b5b086b5044a92e59dde5f08) - We should just disable it from enqueuing in the first place *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :recycle: Refactors
+- [`2b2511b`](https://github.com/itachi1706/SPCCSHelpers/commit/2b2511b1f4a301f0994f2a6d2e398e2d9fa6e8cc) - Remove unnecessary logging *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :white_check_mark: Tests
+- [`e7c7cf8`](https://github.com/itachi1706/SPCCSHelpers/commit/e7c7cf838e08c3fa196c2a67e25a7453c2e712d9) - Updated to add new tests for metric queue *(commit by [@itachi1706](https://github.com/itachi1706))*
+- [`ceef47f`](https://github.com/itachi1706/SPCCSHelpers/commit/ceef47f079fa879f397f38e61055c3865cc0efec) - Fixed lint issues *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+### :wrench: Chores
+- [`26fd4d5`](https://github.com/itachi1706/SPCCSHelpers/commit/26fd4d5378a0e7e5aae70ecfa8431c70082ef132) - **deps**: Bump NuGet/setup-nuget from 2.0.2 to 3.0.0 *(commit by [@dependabot[bot]](https://github.com/apps/dependabot))*
+
+
+## [v3.2.3] - 2026-04-08
+### :bug: Bug Fixes
+- [`b8147b7`](https://github.com/itachi1706/SPCCSHelpers/commit/b8147b7608db77daca2921a0280e651d6d9c036b) - If metrics disabled, clear queue *(commit by [@itachi1706](https://github.com/itachi1706))*
+
+
 ## [v3.2.2] - 2026-03-20
 ### :bug: Bug Fixes
 - [`acbf031`](https://github.com/itachi1706/SPCCSHelpers/commit/acbf031f2792741c863999c47182c7b4357e4f54) - Update DPoP implementation to pass the string value instead *(commit by [@itachi1706](https://github.com/itachi1706))*
@@ -153,3 +173,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v3.2.0]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.1.1...v3.2.0
 [v3.2.1]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.2.0...v3.2.1
 [v3.2.2]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.2.1...v3.2.2
+[v3.2.3]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.2.2...v3.2.3
+[v3.2.4]: https://github.com/itachi1706/SPCCSHelpers/compare/v3.2.3...v3.2.4

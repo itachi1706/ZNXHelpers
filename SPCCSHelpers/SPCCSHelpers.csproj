@@ -3,11 +3,11 @@
   <PropertyGroup>
     <ReleaseVersion>0.2</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>3.2.2</PackageVersion>
+    <PackageVersion>3.2.3</PackageVersion>
     <Configurations>Release;Debug</Configurations>
     <Authors>EMQ2</Authors>
     <NeutralLanguage>en-SG</NeutralLanguage>
-    <PackageReleaseNotes>Better DPoP support</PackageReleaseNotes>
+    <PackageReleaseNotes>Better DPoP support, Fixed metrics queue</PackageReleaseNotes>
     <Summary>Helper Class for SPC Common Services</Summary>
     <Title>SPCCS Helpers</Title>
     <Description>Common Helper class for various common functions</Description>
@@ -16,7 +16,7 @@
     <PackageProjectUrl>https://github.com/itachi1706/SPCCSHelpers</PackageProjectUrl>
     <RepositoryUrl>https://github.com/itachi1706/SPCCSHelpers.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Copyright>2025 EMQ2 Technology Services Pte Ltd</Copyright>
+    <Copyright>2026 EMQ2 Technology Services Pte Ltd</Copyright>
     <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
   </PropertyGroup>
 

@@ -1,12 +1,18 @@
-
 # SPC CS Helpers
 
-SPCCSHelpers is a multi-targeted .NET helper library that centralises cross-cutting concerns used across SPC applications. It packages reusable utilities for AWS integration, environment configuration, encoding, JWT handling, secure random generation, and common exceptions so service code can stay focused on domain logic.
+SPCCSHelpers is a multi-targeted .NET helper library that centralises cross-cutting concerns used across SPC
+applications. It packages reusable utilities for AWS integration, environment configuration, encoding, JWT handling,
+secure random generation, and common exceptions so service code can stay focused on domain logic.
 
 ## Features
-- `AwsHelperV3` (recommended) and `AwsHelperV2` wrap AWS SDK clients for Parameter Store, Secrets Manager, S3, and KMS. V3 adds richer logging, multiple credential sources (shared profiles, STS via EKS service accounts, basic credentials), and pre-signed URL generation.
-- `EnvHelper` offers strongly-typed environment variable accessors with sensible defaults and helpers to detect the current ASP.NET Core environment.
-- `JwtHelper` validates JSON Web Tokens and creates JSON Web Signatures (JWS) using certificates or arbitrary signing credentials.
+
+- `AwsHelperV3` (recommended) and `AwsHelperV2` wrap AWS SDK clients for Parameter Store, Secrets Manager, S3, and KMS.
+  V3 adds richer logging, multiple credential sources (shared profiles, STS via EKS service accounts, basic
+  credentials), and pre-signed URL generation.
+- `EnvHelper` offers strongly-typed environment variable accessors with sensible defaults and helpers to detect the
+  current ASP.NET Core environment.
+- `JwtHelper` validates JSON Web Tokens and creates JSON Web Signatures (JWS) using certificates or arbitrary signing
+  credentials.
 - `Base64Helper` simplifies UTF-8 string encoding/decoding to Base64.
 - `RngHelper` produces cryptographically secure random strings for secrets or temporary passwords.
 - `HttpResponseException` carries HTTP status details for consistent API error responses.
@@ -14,7 +20,9 @@ SPCCSHelpers is a multi-targeted .NET helper library that centralises cross-cutt
 ## Getting Started
 
 ### Prerequisites
-- .NET SDK 10.0 or later (library targets `net6.0`, `net7.0`, `net8.0`, and `net10.0`; the test project runs on `net8.0`).
+
+- .NET SDK 10.0 or later (library targets `net6.0`, `net7.0`, `net8.0`, and `net10.0`; the test project runs on
+  `net8.0`).
 
 ### Install from NuGet
 
@@ -27,6 +35,36 @@ dotnet add package SPCCSHelpers --version 3.2.3
 ```bash
 dotnet add <your-project>.csproj reference ../SPCCSHelpers/SPCCSHelpers.csproj
 ```
+
+### Environment variables used by this library
+
+| Variable                      | Used by                                                    |  Required   | Default                 | Purpose                                                                                       |
+|-------------------------------|------------------------------------------------------------|:-----------:|-------------------------|-----------------------------------------------------------------------------------------------|
+| `KMS_KEY_ID`                  | `AwsHelperV2`, `AwsHelperV3`                               |     No      | –                       | KMS key identifier used for decrypting secure Parameter Store values with encryption context. |
+| `AWS_PROFILE_NAME`            | `AwsHelperV2`, `AwsHelperV3`                               |     No      | –                       | Uses the named shared credentials profile (typically local/dev usage).                        |
+| `S3_BUCKET_NAME`              | `AwsHelperV2`, `AwsHelperV3`                               |     No      | –                       | Default S3 bucket for download/upload helpers and pre-signed URL generation.                  |
+| `AWS_SECRET_NAME`             | `AwsHelperV3`                                              |     No      | –                       | Default Secrets Manager secret name used by `GetSecretFromSecretsManager()`.                  |
+| `AWS_EKS_SA`                  | `AwsHelperV3`                                              |     No      | `false`                 | Enables STS/web-identity credential flow (EKS service account path).                          |
+| `AWS_BASIC_AUTH`              | `AwsHelperV3`                                              |     No      | `false`                 | Force basic AWS credentials mode.                                                             |
+| `AWS_ACCESS_KEY_ID`           | `AwsHelperV3`                                              | Conditional | –                       | Access key used when `AWS_BASIC_AUTH=true`.                                                   |
+| `AWS_SECRET_ACCESS_KEY`       | `AwsHelperV3`                                              | Conditional | –                       | Secret key used when `AWS_BASIC_AUTH=true`.                                                   |
+| `AWS_VERBOSE_DEBUG`           | `AwsHelperV3`                                              |     No      | `false`                 | Enables verbose AWS helper debug logging.                                                     |
+| `AWS_PRINT_STACK_TRACE`       | `AwsHelperV3`                                              |     No      | `false`                 | Includes stack traces in AWS helper error logs.                                               |
+| `AWS_REQUEST_ID_DEBUG`        | `AwsHelperV3`                                              |     No      | `false`                 | Logs AWS request IDs from response metadata.                                                  |
+| `AWS_RESPONSE_METADATA_DEBUG` | `AwsHelperV3`                                              |     No      | `false`                 | Logs full AWS response metadata dictionaries for troubleshooting.                             |
+| `AWS_CUSTOM_METRICS`          | `AwsHelperV3`, `MetricQueue`, `CloudwatchMetricsPublisher` |     No      | `false`                 | Enables CloudWatch custom metrics queueing and publishing support.                            |
+| `METRICS_NAMESPACE`           | `AwsHelperV3`                                              |     No      | `App/SPCCSGateway`      | Default CloudWatch namespace when none is supplied at call time.                              |
+| `METRICS_VERBOSE_LOGGING`     | `CloudwatchMetricsPublisher`                               |     No      | `false`                 | Enables verbose logs in the background metrics publisher loop.                                |
+| `METRICS_ALWAYS_INSTANCE_ID`  | `CloudwatchMetricsPublisher`                               |     No      | `true`                  | Auto-adds `UniqueIdentifier` dimension if missing from queued metrics.                        |
+| `APP_ID`                      | `AwsHelperV3`                                              |     No      | `HOSTNAME` variable     | Preferred unique instance identifier used for metric dimensions.                              |
+| `HOSTNAME`                    | `AwsHelperV3`                                              |     No      | `MACHINE_NAME` variable | Fallback unique instance identifier when `APP_ID` is not set.                                 |
+| `ASPNETCORE_ENVIRONMENT`      | `EnvHelper`, `NdiHelper`                                   |     No      | `Development`           | Controls environment detection helpers and NDI HTTPS validation behavior.                     |
+| `API_GATEWAY_KEY`             | `NdiHelper`                                                |     No      | empty string            | Adds `x-api-key` header for NDI/API-gateway requests when provided.                           |
+
+Notes:
+
+- `Required` is `Conditional` when the variable is only required by a specific mode/flag.
+- If both `APP_ID` and `HOSTNAME` are empty, metric instance identity falls back to the machine name.
 
 ## Usage
 
@@ -45,29 +83,17 @@ var downloadUrl = aws.GeneratePreSignedS3UrlDownload("exports/report.csv", expir
 ```
 
 `AwsHelperV3` automatically picks credential sources in the following order:
+
 1. Shared credentials profile (when `AWS_PROFILE_NAME` is supplied).
 2. STS Assume Role With Web Identity when running in EKS with `AWS_EKS_SA=true`.
 3. Basic access key authentication when `AWS_BASIC_AUTH=true`.
 4. Default environment/instance profile credentials.
 
-All AWS operations default to the `ap-southeast-1` region and fall back to the shared environment bucket/secret names when provided.
+All AWS operations default to the `ap-southeast-1` region and fall back to the shared environment bucket/secret names
+when provided.
 
-#### AWS-related environment variables
-
-| Variable | Required | Default | Purpose |
-| --- | :---: | --- | --- |
-| `KMS_KEY_ID` | No | – | Adds encryption context for secure Parameter Store values. |
-| `AWS_PROFILE_NAME` | No | – | Uses the named profile from local credentials for development. |
-| `S3_BUCKET_NAME` | No | – | Default bucket for S3 downloads/uploads. |
-| `AWS_SECRET_NAME` | No | – | Default Secrets Manager secret to retrieve. |
-| `AWS_EKS_SA` | No | `false` | Enables STS AssumeRoleWithWebIdentity flow for EKS service accounts. |
-| `AWS_BASIC_AUTH` | No | `false` | Forces usage of basic credentials (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`). |
-| `AWS_ACCESS_KEY_ID` | Conditional | – | Access key used when `AWS_BASIC_AUTH=true`. |
-| `AWS_SECRET_ACCESS_KEY` | Conditional | – | Secret key used when `AWS_BASIC_AUTH=true`. |
-| `AWS_VERBOSE_DEBUG` | No | `false` | Emits verbose Serilog debug entries. |
-| `AWS_PRINT_STACK_TRACE` | No | `false` | Logs AWS exception stack traces when failures occur. |
-| `AWS_REQUEST_ID_DEBUG` | No | `false` | Logs AWS response request identifiers. |
-| `AWS_RESPONSE_METADATA_DEBUG` | No | `false` | Logs additional AWS response metadata for troubleshooting. |
+For more information on the environment variables, please
+see [Environment variables used by this library](#environment-variables-used-by-this-library) above.
 
 `AwsHelperV2` remains available for consumers that prefer the earlier, profile-only client creation behaviour.
 
@@ -137,7 +163,9 @@ throw new HttpResponseException(StatusCodes.Status403Forbidden, "Missing permiss
 ```
 
 ### Cloudwatch Custom Metrics Helper
+
 Initialize in Program.cs of your application the following. Note the order must follow these.
+
 ```csharp
 builder.Services.AddSingleton<AwsHelperV3>(); // required
 builder.Services.AddSingleton<MetricQueue>(); // For common queue
@@ -145,6 +173,7 @@ builder.Services.AddHostedService<CloudwatchMetricsPublisher>();
 ```
 
 After that, in any of your classes requiring metrics injection, you can simply do the following:
+
 ```csharp
 public class MyClass
 {
@@ -171,7 +200,6 @@ public class MyClass
 }
 ```
 
-
 ## Development
 
 ```bash
@@ -191,5 +219,6 @@ dotnet test SPCCSHelpers.sln /p:CollectCoverage=true
 Use `dotnet pack SPCCSHelpers/SPCCSHelpers.csproj -c Release` to produce a NuGet package when you are ready to publish.
 
 ## Additional Resources
+
 - `CHANGELOG.md` tracks notable changes across releases.
 - `SPCCSHelpers.Tests` includes samples that demonstrate how each helper is exercised.

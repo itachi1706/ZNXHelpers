@@ -2,11 +2,36 @@ using SPCCSHelpers.CustomMetrics;
 
 namespace SPCCSHelpers.Tests.CustomMetrics;
 
+[Collection("EnvironmentVariableDependent")]
 public class MetricQueueTests
 {
-    [Fact]
-    public async Task Enqueue_allowsReadingQueuedMetric()
+    private static EnvironmentVariableScope SetAwsCustomMetrics(string value)
     {
+        return new EnvironmentVariableScope("AWS_CUSTOM_METRICS", value);
+    }
+
+    private sealed class EnvironmentVariableScope : IDisposable
+    {
+        private readonly string _key;
+        private readonly string? _originalValue;
+
+        public EnvironmentVariableScope(string key, string value)
+        {
+            _key = key;
+            _originalValue = Environment.GetEnvironmentVariable(key);
+            Environment.SetEnvironmentVariable(key, value);
+        }
+
+        public void Dispose()
+        {
+            Environment.SetEnvironmentVariable(_key, _originalValue);
+        }
+    }
+
+    [Fact]
+    public async Task Enqueue_withCustomMetricsEnabled_allowsReadingQueuedMetric()
+    {
+        using var _ = SetAwsCustomMetrics("true");
         var queue = new MetricQueue();
         var metric = new CustomMetric { Name = "RequestCount", Value = 1 };
 
@@ -18,8 +43,9 @@ public class MetricQueueTests
     }
 
     [Fact]
-    public async Task Enqueue_multipleMetrics_areReadInFifoOrder()
+    public async Task Enqueue_withCustomMetricsEnabled_multipleMetricsAreReadInFifoOrder()
     {
+        using var _ = SetAwsCustomMetrics("true");
         var queue = new MetricQueue();
         var first = new CustomMetric { Name = "First", Value = 1 };
         var second = new CustomMetric { Name = "Second", Value = 2 };
@@ -35,8 +61,9 @@ public class MetricQueueTests
     }
 
     [Fact]
-    public async Task Reader_waitsForDataAndThenReturnsQueuedMetric()
+    public async Task Reader_withCustomMetricsEnabled_waitsForDataAndThenReturnsQueuedMetric()
     {
+        using var _ = SetAwsCustomMetrics("true");
         var queue = new MetricQueue();
         var metric = new CustomMetric { Name = "Delayed", Value = 10 };
 
@@ -51,8 +78,9 @@ public class MetricQueueTests
     }
 
     [Fact]
-    public void Reader_isEmptyBeforeAnyMetricIsQueued()
+    public void Reader_withCustomMetricsEnabled_isEmptyBeforeAnyMetricIsQueued()
     {
+        using var _ = SetAwsCustomMetrics("true");
         var queue = new MetricQueue();
 
         var hasValue = queue.Reader.TryRead(out var metric);
@@ -62,8 +90,9 @@ public class MetricQueueTests
     }
 
     [Fact]
-    public async Task Enqueue_acceptsNullMetricValue()
+    public async Task Enqueue_withCustomMetricsEnabled_acceptsNullMetricValue()
     {
+        using var _ = SetAwsCustomMetrics("true");
         var queue = new MetricQueue();
 
         queue.Enqueue(null!);
@@ -71,5 +100,19 @@ public class MetricQueueTests
         var readMetric = await queue.Reader.ReadAsync();
 
         Assert.Null(readMetric);
+    }
+
+    [Fact]
+    public void Enqueue_withCustomMetricsDisabled_doesNotQueueMetric()
+    {
+        using var _ = SetAwsCustomMetrics("false");
+        var queue = new MetricQueue();
+
+        queue.Enqueue(new CustomMetric { Name = "Suppressed", Value = 1 });
+
+        var hasValue = queue.Reader.TryRead(out var metric);
+
+        Assert.False(hasValue);
+        Assert.Null(metric);
     }
 }

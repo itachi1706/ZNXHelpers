@@ -37,13 +37,21 @@ jobs:
         run: |
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+      - name: Extract Versions from .csproj
+        shell: pwsh
+        run: |
+          [xml]$csproj = Get-Content "SPCCSHelpers/SPCCSHelpers.csproj"
+          $version = $csproj.Project.PropertyGroup.PackageVersion
+          if (-not $version) { $version = $csproj.Project.PropertyGroup.Version }
+          if (-not $version) { $version = "1.0.0" }
+          echo "PKG_VERSION=$version" >> $env:GITHUB_ENV
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"itachi1706_SPCCSHelpers" /o:"itachi1706" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.cs.opencover.reportsPaths=coverage.xml
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"itachi1706_SPCCSHelpers" /v:"${{ env.PKG_VERSION }}" /o:"itachi1706" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.cs.opencover.reportsPaths=coverage.xml
           dotnet build
           dotnet test --no-build --collect:"XPlat Code Coverage;Format=cobertura,opencover" --verbosity normal
            mv SPCCSHelpers.Tests/TestResults/*/coverage.opencover.xml coverage.xml
